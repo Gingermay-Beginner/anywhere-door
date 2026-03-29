@@ -626,7 +626,9 @@ body::before {
 @media (max-width: 500px) {
   .door-frame { width: 120px; height: 180px; }
   .door-handle { right: 12px; }
-  .search-row input { text-align: center; padding: 0.9rem; }
+  .search-row { max-width: 90vw; width: 90vw; }
+  .search-row form { width: 100%; }
+  .search-row input { text-align: left; padding: 0.9rem 1rem; font-size: 16px; width: 100%; }
   .anim-door-frame { width: 200px; height: 300px; }
   .anim-step-through-glow { width: 200px; height: 300px; }
 }
