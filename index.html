@@ -757,20 +757,23 @@ body::before {
   100% { transform: translateX(-5%) scaleY(1); }
 }
 
-/* ── Hearts: Floating upward ── */
+/* ── Hearts: Floating upward (soap-bubble / dandelion style) ── */
 .heart {
   position: absolute;
-  bottom: -30px;
-  font-size: 18px;
+  bottom: -20px;
+  font-size: 14px;
   opacity: 0;
-  animation: heartFloat 2.5s ease-out forwards;
+  animation: heartFloat 3.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  filter: blur(0.3px);
 }
 
 @keyframes heartFloat {
-  0% { opacity: 0; transform: translateY(0) translateX(0) scale(0.5); }
-  10% { opacity: 0.9; transform: translateY(-10vh) translateX(5px) scale(1); }
-  50% { opacity: 0.8; transform: translateY(-50vh) translateX(-8px) scale(0.9); }
-  100% { opacity: 0; transform: translateY(-110vh) translateX(12px) scale(0.6); }
+  0%   { opacity: 0;    transform: translateY(0)      translateX(0)    scale(0.4); }
+  8%   { opacity: 0.95; transform: translateY(-6vh)    translateX(8px)  scale(0.7); }
+  25%  { opacity: 0.85; transform: translateY(-25vh)   translateX(-18px) scale(0.65); }
+  50%  { opacity: 0.65; transform: translateY(-50vh)   translateX(22px) scale(0.6); }
+  75%  { opacity: 0.35; transform: translateY(-75vh)   translateX(-15px) scale(0.55); }
+  100% { opacity: 0;    transform: translateY(-110vh)  translateX(10px) scale(0.45); }
 }
 
 /* scrollbar — just in case */
@@ -1064,20 +1067,20 @@ function playHeartsAnimation() {
   const overlay = document.createElement('div');
   overlay.className = 'easter-egg-overlay';
   const hearts = ['❤️', '💕', '💗', '💖', '💓'];
-  const count = 15 + Math.floor(Math.random() * 6); // 15-20
+  const count = 20 + Math.floor(Math.random() * 10); // 20-29, more hearts
   for (let i = 0; i < count; i++) {
     const heart = document.createElement('div');
     heart.className = 'heart';
     heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
-    heart.style.left = (Math.random() * 100) + '%';
-    heart.style.animationDelay = (Math.random() * 1.0) + 's';
-    heart.style.animationDuration = (2 + Math.random() * 0.5) + 's';
-    const size = 14 + Math.random() * 14;
+    heart.style.left = (5 + Math.random() * 90) + '%';
+    heart.style.animationDelay = (Math.random() * 2.5) + 's';
+    heart.style.animationDuration = (3 + Math.random() * 1.2) + 's';
+    const size = 10 + Math.random() * 6; // 10-16px (0.8em-1.2em range)
     heart.style.fontSize = size + 'px';
     overlay.appendChild(heart);
   }
   document.body.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 3000);
+  setTimeout(() => overlay.remove(), 6000);
 }
 
 function fireEasterEgg(type) {
