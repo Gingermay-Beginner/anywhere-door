@@ -757,37 +757,37 @@ body::before {
   100% { transform: translateX(-5%) scaleY(1); }
 }
 
-/* ── Hearts: Floating upward (soap-bubble / dandelion style) ── */
-.heart-track {
+/* ── Hearts overlay: BEHIND the door ── */
+.hearts-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ── Hearts: Burst from center then float up ── */
+.heart-particle {
   position: absolute;
-  bottom: -20px;
-  will-change: transform;
-  animation: heartFloat var(--float-dur, 3.5s) linear forwards;
-}
-
-.heart {
-  will-change: transform;
+  will-change: transform, opacity;
+  /* Start at center — JS sets --start-x, --start-y, --burst-x, --burst-y */
+  left: var(--start-x, 50%);
+  top: var(--start-y, 50%);
+  transform: translate(-50%, -50%);
   opacity: 0;
-  animation: heartSway var(--sway-dur, 2.8s) ease-in-out infinite,
-             heartFade var(--float-dur, 3.5s) linear forwards;
+  animation:
+    heartBurst var(--burst-dur, 0.6s) cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    heartRise var(--rise-dur, 2.5s) ease-in var(--burst-dur, 0.6s) forwards;
 }
 
-@keyframes heartFloat {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-115vh); }
+@keyframes heartBurst {
+  0%   { transform: translate(-50%, -50%) translate(0, 0) scale(0.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--burst-x, 100px), var(--burst-y, -80px)) scale(1); opacity: 1; }
 }
 
-@keyframes heartSway {
-  0%   { transform: translateX(var(--sway-x, 18px)); }
-  50%  { transform: translateX(calc(var(--sway-x, 18px) * -1)); }
-  100% { transform: translateX(var(--sway-x, 18px)); }
-}
-
-@keyframes heartFade {
-  0%   { opacity: 0; }
-  6%   { opacity: 0.9; }
-  70%  { opacity: 0.6; }
-  100% { opacity: 0; }
+@keyframes heartRise {
+  0%   { transform: translate(-50%, -50%) translate(var(--burst-x, 100px), var(--burst-y, -80px)) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(calc(var(--burst-x, 100px) + var(--sway-x, 20px)), calc(var(--burst-y, -80px) - 60vh)) scale(0.7); opacity: 0; }
 }
 
 /* scrollbar — just in case */
@@ -1079,30 +1079,34 @@ function playArcticAnimation() {
 
 function playHeartsAnimation() {
   const overlay = document.createElement('div');
-  overlay.className = 'easter-egg-overlay';
+  overlay.className = 'hearts-overlay';
   const hearts = ['❤️', '💕', '💗', '💖', '💓'];
-  const count = 20 + Math.floor(Math.random() * 10);
+  const count = 25 + Math.floor(Math.random() * 10);
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
   for (let i = 0; i < count; i++) {
-    const track = document.createElement('div');
-    track.className = 'heart-track';
-    const floatDur = 3 + Math.random() * 1.2;
-    const swayDur = 1.8 + Math.random() * 1.2;
-    const delay = Math.random() * 2.5;
-    const swayX = 12 + Math.random() * 16;
-    track.style.left = (5 + Math.random() * 90) + '%';
-    track.style.setProperty('--float-dur', floatDur + 's');
-    track.style.setProperty('--sway-dur', swayDur + 's');
-    track.style.setProperty('--sway-x', swayX + 'px');
-    track.style.animationDelay = delay + 's';
-
-    const heart = document.createElement('div');
-    heart.className = 'heart';
-    heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
-    heart.style.fontSize = (10 + Math.random() * 6) + 'px';
-    heart.style.animationDelay = delay + 's';
-
-    track.appendChild(heart);
-    overlay.appendChild(track);
+    const el = document.createElement('div');
+    el.className = 'heart-particle';
+    el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+    el.style.fontSize = (12 + Math.random() * 8) + 'px';
+    // Start from center of screen (where the door is)
+    el.style.setProperty('--start-x', centerX + 'px');
+    el.style.setProperty('--start-y', centerY + 'px');
+    // Burst outward in all directions
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 80 + Math.random() * 200;
+    el.style.setProperty('--burst-x', Math.cos(angle) * distance + 'px');
+    el.style.setProperty('--burst-y', Math.sin(angle) * distance + 'px');
+    // Gentle sway during rise
+    el.style.setProperty('--sway-x', (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 20) + 'px');
+    // Timing variation
+    const burstDur = 0.4 + Math.random() * 0.3;
+    const riseDur = 2 + Math.random() * 1.5;
+    el.style.setProperty('--burst-dur', burstDur + 's');
+    el.style.setProperty('--rise-dur', riseDur + 's');
+    // Stagger start slightly
+    el.style.animationDelay = (Math.random() * 0.3) + 's, ' + (burstDur + Math.random() * 0.3) + 's';
+    overlay.appendChild(el);
   }
   document.body.appendChild(overlay);
   setTimeout(() => overlay.remove(), 6000);
