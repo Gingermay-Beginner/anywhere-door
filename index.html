@@ -702,6 +702,8 @@ const doorWrapper  = document.getElementById('doorClick');
 
 let isOpening = false;
 let lastHasText = false;
+let knockInterval = null;
+let knockAudioCtx = null;
 
 const HINT_DEFAULT = 'Type a place to begin';
 const HINT_ACTIVE  = 'Press Enter or click Open';
@@ -712,9 +714,11 @@ placeInput.addEventListener('input', () => {
   if (hasText) {
     openBtn.classList.add('visible');
     doorWrapper.classList.add('has-text');
+    startKnocking();
   } else {
     openBtn.classList.remove('visible');
     doorWrapper.classList.remove('has-text');
+    stopKnocking();
   }
 
   // Fade-swap hint text when state changes
@@ -727,6 +731,92 @@ placeInput.addEventListener('input', () => {
     }, 300);
   }
 });
+
+// Web Audio API — knock sound (knuckles on wood, from inside the door)
+function getKnockCtx() {
+  if (!knockAudioCtx) {
+    knockAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return knockAudioCtx;
+}
+
+function playKnock(ctx, time) {
+  // Low-frequency thud oscillator
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(200, time);
+  osc.frequency.exponentialRampToValueAtTime(100, time + 0.08);
+
+  // Noise burst for wood texture
+  const noiseDur = 0.08;
+  const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * noiseDur, ctx.sampleRate);
+  const noiseData = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < noiseData.length; i++) {
+    const t = i / ctx.sampleRate;
+    noiseData[i] = (Math.random() * 2 - 1) * Math.exp(-t * 60);
+  }
+  const noiseSrc = ctx.createBufferSource();
+  noiseSrc.buffer = noiseBuffer;
+
+  // Bandpass filter to shape wood thud
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 180;
+  filter.Q.value = 1.5;
+
+  // Envelope — quick attack, fast decay
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, time);
+  env.gain.linearRampToValueAtTime(0.18, time + 0.005);
+  env.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
+  // Short delay for subtle room feel
+  const delay = ctx.createDelay();
+  delay.delayTime.value = 0.035;
+  const delayGain = ctx.createGain();
+  delayGain.gain.value = 0.15;
+
+  // Connect oscillator path
+  osc.connect(filter);
+  noiseSrc.connect(filter);
+  filter.connect(env);
+
+  // Dry signal
+  env.connect(ctx.destination);
+  // Wet (short reverb) signal
+  env.connect(delay);
+  delay.connect(delayGain);
+  delayGain.connect(ctx.destination);
+
+  osc.start(time);
+  osc.stop(time + 0.08);
+  noiseSrc.start(time);
+  noiseSrc.stop(time + noiseDur);
+}
+
+function playKnockKnock() {
+  try {
+    const ctx = getKnockCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    // First knock at ~50ms into animation, second at ~200ms
+    playKnock(ctx, now + 0.05);
+    playKnock(ctx, now + 0.20);
+  } catch (e) { /* audio not available */ }
+}
+
+function startKnocking() {
+  if (knockInterval) return;
+  playKnockKnock();
+  knockInterval = setInterval(playKnockKnock, 2400);
+}
+
+function stopKnocking() {
+  if (knockInterval) {
+    clearInterval(knockInterval);
+    knockInterval = null;
+  }
+}
 
 // Web Audio API — door latch click sound (sharp mechanical)
 function playLatchClick(ctx) {
@@ -874,6 +964,7 @@ async function openDoor(place) {
   placeInput.value = '';
   openBtn.classList.remove('visible');
   doorWrapper.classList.remove('has-text');
+  stopKnocking();
   hintText.textContent = HINT_DEFAULT;
   lastHasText = false;
   placeInput.focus();
