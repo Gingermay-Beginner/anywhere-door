@@ -114,17 +114,96 @@ body::before {
   border-radius: 10px 10px 2px 2px;
 }
 
-/* door knob */
-.door-knob {
+/* door handle — interactive brass knob */
+.door-handle {
   position: absolute;
-  right: 18px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
-  background: radial-gradient(circle at 40% 35%, #ffe082, var(--gold));
+  width: 32px;
+  height: 32px;
+  z-index: 5;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.door-handle:hover { filter: brightness(1.15); }
+.door-handle:active { filter: brightness(0.95); }
+
+/* outer knob ring */
+.door-handle-knob {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  box-shadow: 0 0 12px var(--gold), 0 2px 4px rgba(0,0,0,0.3);
+  background: radial-gradient(circle at 38% 32%, #fff6d5, #f0c27f 40%, #c9953c 80%, #8b6914);
+  box-shadow:
+    0 0 16px rgba(240, 194, 127, 0.6),
+    0 2px 6px rgba(0,0,0,0.4),
+    inset 0 1px 2px rgba(255,255,255,0.6),
+    inset 0 -1px 3px rgba(0,0,0,0.3);
+  position: relative;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* inner knob detail — keyhole / center dot */
+.door-handle-knob::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #8b6914, #5a3e0a);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* shine highlight */
+.door-handle-knob::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 10px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  filter: blur(1px);
+}
+
+/* escutcheon plate behind the knob */
+.door-handle-plate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #c9953c, #8b6914);
+  opacity: 0.4;
+  z-index: -1;
+}
+
+/* turn animation */
+.door-handle-knob.turning {
+  transform: rotate(-35deg);
+}
+
+/* "turn to open" hint label */
+.door-handle-hint {
+  position: absolute;
+  right: -2px;
+  top: calc(50% + 28px);
+  font-size: 0.5rem;
+  color: rgba(255, 246, 213, 0.5);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+  text-align: center;
+  width: 48px;
+  transform: translateX(8px);
 }
 
 /* subtle light beam from under the door */
@@ -200,21 +279,8 @@ body::before {
 
 .search-row input::placeholder { color: var(--text-dim); }
 
-.search-row button {
-  padding: 1rem 1.8rem;
-  background: linear-gradient(135deg, var(--accent), var(--door-frame));
-  color: white;
-  border: none;
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.3s;
-  white-space: nowrap;
-}
-
-.search-row button:hover {
-  background: linear-gradient(135deg, var(--accent2), var(--accent));
+.search-row input {
+  border-radius: 60px;
 }
 
 .hint {
@@ -479,10 +545,11 @@ body::before {
 /* ── Responsive ── */
 @media (max-width: 500px) {
   .door-frame { width: 120px; height: 180px; }
-  .door-knob { right: 14px; width: 11px; height: 11px; }
-  .search-row form { flex-direction: column; border-radius: 16px; }
+  .door-handle { right: 10px; width: 24px; height: 24px; }
+  .door-handle-plate { width: 30px; height: 30px; }
+  .door-handle-knob::after { width: 6px; height: 6px; }
+  .door-handle-hint { font-size: 0.4rem; width: 40px; top: calc(50% + 22px); }
   .search-row input { text-align: center; padding: 0.9rem; }
-  .search-row button { border-radius: 0; padding: 0.8rem; }
   .anim-door-frame { width: 200px; height: 300px; }
   .anim-step-through-glow { width: 200px; height: 300px; }
 }
@@ -498,7 +565,11 @@ body::before {
   <div class="door-wrapper" id="doorClick">
     <div class="door-frame">
       <div class="door-body">
-        <div class="door-knob"></div>
+        <div class="door-handle" id="doorHandle">
+          <div class="door-handle-plate"></div>
+          <div class="door-handle-knob" id="doorHandleKnob"></div>
+        </div>
+        <div class="door-handle-hint">turn to open</div>
       </div>
     </div>
     <div class="door-label">
@@ -510,9 +581,8 @@ body::before {
   <div class="search-row">
     <form id="searchForm">
       <input type="text" id="placeInput" placeholder="Where to go?" autocomplete="off" autofocus />
-      <button type="submit">Open the Door</button>
     </form>
-    <p class="hint">Enter a place, then press Enter or click the door</p>
+    <p class="hint">Enter a place, then turn the handle</p>
   </div>
 </div>
 
@@ -544,20 +614,72 @@ body::before {
 </div>
 
 <script>
-const landing    = document.getElementById('landing');
-const searchForm = document.getElementById('searchForm');
-const placeInput = document.getElementById('placeInput');
-const doorClick  = document.getElementById('doorClick');
-const doorAnim   = document.getElementById('doorAnim');
+const landing      = document.getElementById('landing');
+const searchForm   = document.getElementById('searchForm');
+const placeInput   = document.getElementById('placeInput');
+const doorHandle   = document.getElementById('doorHandle');
+const doorHandleKnob = document.getElementById('doorHandleKnob');
+const doorAnim     = document.getElementById('doorAnim');
+
+let isOpening = false;
+
+// Web Audio API — mechanical click sound
+function playClickSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Sharp click: short burst of noise with fast decay
+    const duration = 0.06;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * duration, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate;
+      // Decaying noise burst — sounds like a mechanical latch
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 80) * 0.3;
+    }
+    // Add a subtle tonal "click" at ~3kHz
+    for (let i = 0; i < data.length; i++) {
+      const t = i / ctx.sampleRate;
+      data[i] += Math.sin(2 * Math.PI * 3000 * t) * Math.exp(-t * 120) * 0.15;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.5;
+    src.connect(gain).connect(ctx.destination);
+    src.start();
+    // Second softer click 30ms later (latch settling)
+    const src2 = ctx.createBufferSource();
+    src2.buffer = buffer;
+    const gain2 = ctx.createGain();
+    gain2.gain.value = 0.2;
+    src2.connect(gain2).connect(ctx.destination);
+    src2.start(ctx.currentTime + 0.03);
+  } catch (e) { /* audio not available */ }
+}
 
 function triggerSearch() {
+  if (isOpening) return;
   const place = placeInput.value.trim();
   if (!place) { placeInput.focus(); return; }
-  openDoor(place);
+  isOpening = true;
+  handleTurnThenOpen(place);
 }
 
 searchForm.addEventListener('submit', e => { e.preventDefault(); triggerSearch(); });
-doorClick.addEventListener('click', () => triggerSearch());
+doorHandle.addEventListener('click', e => { e.stopPropagation(); triggerSearch(); });
+
+async function handleTurnThenOpen(place) {
+  // Play click and turn the handle
+  playClickSound();
+  doorHandleKnob.classList.add('turning');
+
+  // Let the handle turn animation play
+  await wait(400);
+  doorHandleKnob.classList.remove('turning');
+
+  // Now proceed with the door open animation
+  openDoor(place);
+}
 
 async function openDoor(place) {
   landing.classList.add('hidden');
@@ -589,6 +711,7 @@ async function openDoor(place) {
   landing.classList.remove('hidden');
   placeInput.value = '';
   placeInput.focus();
+  isOpening = false;
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
