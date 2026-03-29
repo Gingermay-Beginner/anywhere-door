@@ -1104,8 +1104,9 @@ function playHeartsAnimation() {
     const riseDur = 2 + Math.random() * 1.5;
     el.style.setProperty('--burst-dur', burstDur + 's');
     el.style.setProperty('--rise-dur', riseDur + 's');
-    // Stagger start slightly
-    el.style.animationDelay = (Math.random() * 0.3) + 's, ' + (burstDur + Math.random() * 0.3) + 's';
+    // Stagger start: first anim (burst) delay, second anim (rise) starts after burst
+    const stagger = Math.random() * 0.2;
+    el.style.animationDelay = stagger + 's, ' + (stagger + burstDur) + 's';
     overlay.appendChild(el);
   }
   document.body.appendChild(overlay);
