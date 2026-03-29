@@ -306,7 +306,7 @@ body::before {
   border: none;
   color: var(--text);
   font-family: inherit;
-  font-size: 1.1rem;
+  font-size: 16px;
   outline: none;
 }
 
@@ -759,6 +759,19 @@ body::before {
 
 /* ── Hearts: JS-driven animation, no CSS keyframes ── */
 
+/* ── Mobile keyboard open state ── */
+#landing.keyboard-open .door-wrapper {
+  display: none;
+}
+
+#landing.keyboard-open {
+  justify-content: center;
+}
+
+#landing.keyboard-open .search-row {
+  width: 80%;
+}
+
 /* scrollbar — just in case */
 ::-webkit-scrollbar { width: 0; height: 0; }
 </style>
@@ -783,7 +796,7 @@ body::before {
 
   <div class="search-row">
     <form id="searchForm">
-      <input type="text" id="placeInput" placeholder="Where to go?" autocomplete="off" autofocus />
+      <input type="text" id="placeInput" placeholder="Where to go?" autocomplete="off" autofocus inputmode="text" />
 
       <button type="submit" class="open-btn" id="openBtn">Open</button>
     </form>
@@ -1163,6 +1176,32 @@ async function openDoor(place) {
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Mobile virtual keyboard detection ──
+(function() {
+  const initialHeight = window.innerHeight;
+  const THRESHOLD = 0.75; // keyboard likely open if viewport < 75% of initial
+
+  function setKeyboardState(isOpen) {
+    if (isOpen) {
+      landing.classList.add('keyboard-open');
+    } else {
+      landing.classList.remove('keyboard-open');
+    }
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      const ratio = window.visualViewport.height / initialHeight;
+      setKeyboardState(ratio < THRESHOLD);
+    });
+  } else {
+    window.addEventListener('resize', () => {
+      const ratio = window.innerHeight / initialHeight;
+      setKeyboardState(ratio < THRESHOLD);
+    });
+  }
+})();
 </script>
 </body>
 </html>
