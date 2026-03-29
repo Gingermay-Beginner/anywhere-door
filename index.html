@@ -631,6 +631,132 @@ body::before {
   .anim-step-through-glow { width: 200px; height: 300px; }
 }
 
+/* ══════════════════════════════════════
+   EASTER EGG ANIMATIONS
+   ══════════════════════════════════════ */
+
+/* ── Container for all easter egg overlays ── */
+.easter-egg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* ── Tokyo: Cherry Blossom Petals ── */
+.petal {
+  position: absolute;
+  top: -30px;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(ellipse at 30% 30%, #ffb7d5, #ff69b4 60%, #ff1493);
+  border-radius: 50% 0 50% 50%;
+  opacity: 0;
+  animation: petalFall 2s ease-in forwards;
+}
+
+@keyframes petalFall {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg) translateX(0); }
+  10% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(105vh) rotate(720deg) translateX(60px); }
+}
+
+/* ── Hawaii: Volcanic Glow ── */
+.volcanic-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  animation: volcGlow 1.5s ease-in-out forwards;
+  box-shadow:
+    inset 0 0 120px rgba(255, 80, 0, 0.6),
+    inset 0 0 250px rgba(255, 40, 0, 0.3);
+}
+
+@keyframes volcGlow {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.ember {
+  position: absolute;
+  bottom: 0;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, #ffcc00, #ff6600);
+  border-radius: 50%;
+  opacity: 0;
+  animation: emberRise 1.5s ease-out forwards;
+}
+
+@keyframes emberRise {
+  0% { opacity: 0; transform: translateY(0) scale(1); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-100vh) scale(0.3); }
+}
+
+/* ── Arctic: Aurora Borealis ── */
+.aurora-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  z-index: 50;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  animation: auroraFade 2s ease-in-out forwards;
+}
+
+@keyframes auroraFade {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.aurora-wave {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  height: 120px;
+  border-radius: 50%;
+  filter: blur(30px);
+  opacity: 0.7;
+  animation: auroraRipple 2s ease-in-out infinite;
+}
+
+.aurora-wave:nth-child(1) {
+  top: 5%;
+  background: linear-gradient(90deg, transparent, rgba(0,255,180,0.4), rgba(0,200,255,0.3), transparent);
+  animation-duration: 2.5s;
+}
+
+.aurora-wave:nth-child(2) {
+  top: 15%;
+  background: linear-gradient(90deg, transparent, rgba(100,0,255,0.3), rgba(0,255,150,0.35), transparent);
+  animation-duration: 3s;
+  animation-delay: 0.3s;
+}
+
+.aurora-wave:nth-child(3) {
+  top: 10%;
+  background: linear-gradient(90deg, transparent, rgba(0,255,200,0.25), rgba(150,0,255,0.3), rgba(0,200,200,0.2), transparent);
+  animation-duration: 2.8s;
+  animation-delay: 0.6s;
+}
+
+@keyframes auroraRipple {
+  0% { transform: translateX(-5%) scaleY(1); }
+  50% { transform: translateX(5%) scaleY(1.4); }
+  100% { transform: translateX(-5%) scaleY(1); }
+}
+
 /* scrollbar — just in case */
 ::-webkit-scrollbar { width: 0; height: 0; }
 </style>
@@ -916,8 +1042,80 @@ function triggerSearch() {
 
 searchForm.addEventListener('submit', e => { e.preventDefault(); triggerSearch(); });
 doorHandle.addEventListener('click', e => { e.stopPropagation(); triggerSearch(); });
+doorWrapper.addEventListener('click', () => { triggerSearch(); });
+
+// ── Easter egg detection ──
+function detectEasterEgg(place) {
+  const lower = place.toLowerCase();
+  if (lower.includes('tokyo') || lower.includes('东京') || lower.includes('とうきょう')) return 'tokyo';
+  if (lower.includes('hawaii') || lower.includes('夏威夷')) return 'hawaii';
+  if (lower.includes('arctic') || lower.includes('北极') || lower.includes('north pole')) return 'arctic';
+  return null;
+}
+
+function playTokyoAnimation() {
+  const overlay = document.createElement('div');
+  overlay.className = 'easter-egg-overlay';
+  for (let i = 0; i < 20; i++) {
+    const petal = document.createElement('div');
+    petal.className = 'petal';
+    petal.style.left = (Math.random() * 100) + '%';
+    petal.style.animationDelay = (Math.random() * 0.8) + 's';
+    petal.style.animationDuration = (1.4 + Math.random() * 0.8) + 's';
+    const size = 8 + Math.random() * 10;
+    petal.style.width = size + 'px';
+    petal.style.height = size + 'px';
+    const hue = Math.random() > 0.5 ? '#ffb7d5' : '#ff69b4';
+    petal.style.background = `radial-gradient(ellipse at 30% 30%, ${hue}, #ff1493)`;
+    overlay.appendChild(petal);
+  }
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 2200);
+}
+
+function playHawaiiAnimation() {
+  const glow = document.createElement('div');
+  glow.className = 'volcanic-glow';
+  document.body.appendChild(glow);
+  for (let i = 0; i < 15; i++) {
+    const ember = document.createElement('div');
+    ember.className = 'ember';
+    ember.style.left = (10 + Math.random() * 80) + '%';
+    ember.style.animationDelay = (Math.random() * 0.8) + 's';
+    ember.style.animationDuration = (1 + Math.random() * 0.5) + 's';
+    const size = 2 + Math.random() * 4;
+    ember.style.width = size + 'px';
+    ember.style.height = size + 'px';
+    glow.appendChild(ember);
+  }
+  setTimeout(() => glow.remove(), 1700);
+}
+
+function playArcticAnimation() {
+  const container = document.createElement('div');
+  container.className = 'aurora-container';
+  for (let i = 0; i < 3; i++) {
+    const wave = document.createElement('div');
+    wave.className = 'aurora-wave';
+    container.appendChild(wave);
+  }
+  document.body.appendChild(container);
+  setTimeout(() => container.remove(), 2200);
+}
+
+async function playEasterEgg(type) {
+  if (type === 'tokyo') { playTokyoAnimation(); await wait(2000); }
+  else if (type === 'hawaii') { playHawaiiAnimation(); await wait(1500); }
+  else if (type === 'arctic') { playArcticAnimation(); await wait(2000); }
+}
 
 async function handleTurnThenOpen(place) {
+  // Check for easter egg
+  const egg = detectEasterEgg(place);
+  if (egg) {
+    await playEasterEgg(egg);
+  }
+
   // Play door sounds
   playDoorSounds();
 
