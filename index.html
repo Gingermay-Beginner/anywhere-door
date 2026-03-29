@@ -632,23 +632,25 @@ function playCreakSound(ctx, delayTime) {
   const startTime = ctx.currentTime + delayTime;
   const creakDuration = 0.9;
 
-  // Main creak — oscillator sweeping down
+  // Main creak — oscillator sweeping up with springy tail
   const osc = ctx.createOscillator();
   osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(300, startTime);
-  osc.frequency.exponentialRampToValueAtTime(80, startTime + creakDuration);
+  osc.frequency.setValueAtTime(200, startTime);
+  osc.frequency.exponentialRampToValueAtTime(600, startTime + creakDuration * 0.6);
+  osc.frequency.exponentialRampToValueAtTime(900, startTime + creakDuration);
 
   // Second harmonic for wooden texture
   const osc2 = ctx.createOscillator();
   osc2.type = 'triangle';
-  osc2.frequency.setValueAtTime(180, startTime);
-  osc2.frequency.exponentialRampToValueAtTime(50, startTime + creakDuration);
+  osc2.frequency.setValueAtTime(120, startTime);
+  osc2.frequency.exponentialRampToValueAtTime(360, startTime + creakDuration * 0.6);
+  osc2.frequency.exponentialRampToValueAtTime(540, startTime + creakDuration);
 
   // Amplitude modulation for stuttery creak feel
   const lfo = ctx.createOscillator();
   lfo.type = 'sine';
   lfo.frequency.setValueAtTime(12, startTime);
-  lfo.frequency.linearRampToValueAtTime(6, startTime + creakDuration);
+  lfo.frequency.linearRampToValueAtTime(18, startTime + creakDuration);
   const lfoGain = ctx.createGain();
   lfoGain.gain.value = 0.4;
   lfo.connect(lfoGain);
@@ -666,8 +668,8 @@ function playCreakSound(ctx, delayTime) {
   // Bandpass filter to shape it like wood
   const filter = ctx.createBiquadFilter();
   filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(400, startTime);
-  filter.frequency.exponentialRampToValueAtTime(150, startTime + creakDuration);
+  filter.frequency.setValueAtTime(300, startTime);
+  filter.frequency.exponentialRampToValueAtTime(800, startTime + creakDuration);
   filter.Q.value = 3;
 
   osc.connect(filter);
