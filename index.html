@@ -114,12 +114,20 @@ body::before {
   border-radius: 10px 10px 2px 2px;
 }
 
-/* door handle — slim lever style */
+/* door handle — round brass knob */
 .door-handle {
   position: absolute;
-  right: 16px;
+  right: 18px;
   top: 50%;
   transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6d5, #f0c27f 40%, #c9953c 75%, #8b6914);
+  box-shadow:
+    0 0 8px rgba(240, 194, 127, 0.5),
+    0 2px 4px rgba(0,0,0,0.4),
+    inset 0 1px 2px rgba(255,255,255,0.4);
   z-index: 5;
   cursor: pointer;
   transition: filter 0.2s;
@@ -127,51 +135,6 @@ body::before {
 
 .door-handle:hover { filter: brightness(1.15); }
 .door-handle:active { filter: brightness(0.95); }
-
-/* lever handle */
-.door-handle-lever {
-  position: relative;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: right center;
-}
-
-/* mounting plate — small rounded rectangle */
-.door-handle-lever::before {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 6px;
-  height: 22px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, #e8c56a, #c9953c 50%, #8b6914);
-  box-shadow:
-    0 1px 3px rgba(0,0,0,0.4),
-    inset 0 1px 1px rgba(255,255,255,0.3);
-}
-
-/* lever bar — L-shape horizontal part */
-.door-handle-lever::after {
-  content: '';
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 4px;
-  border-radius: 2px 0 0 2px;
-  background: linear-gradient(180deg, #fff6d5, #f0c27f 30%, #c9953c 80%, #8b6914);
-  box-shadow:
-    0 0 10px rgba(240, 194, 127, 0.5),
-    0 2px 4px rgba(0,0,0,0.3),
-    inset 0 1px 1px rgba(255,255,255,0.5);
-}
-
-/* turn animation */
-.door-handle-lever.turning {
-  transform: rotate(25deg);
-}
 
 /* subtle light beam from under the door */
 .door-frame::after {
@@ -210,12 +173,17 @@ body::before {
   font-style: italic;
   opacity: 0.8;
   margin-top: 0.15em;
+  background: linear-gradient(135deg, var(--gold), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* ── Search input ── */
 .search-row {
-  width: 90%;
-  max-width: 500px;
+  width: 60%;
+  max-width: 340px;
+  margin: 0 auto;
 }
 
 .search-row form {
@@ -489,18 +457,18 @@ body::before {
   border-radius: 10px 10px 2px 2px;
 }
 
-/* lever handle on the animation panel */
+/* round knob on the animation panel */
 .anim-panel::after {
   content: '';
   position: absolute;
-  right: 18px;
+  right: 24px;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 4px;
-  background: linear-gradient(180deg, #fff6d5, #f0c27f 30%, #c9953c 80%);
-  border-radius: 2px;
-  box-shadow: 0 0 10px rgba(240, 194, 127, 0.5), 0 2px 4px rgba(0,0,0,0.3);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6d5, #f0c27f 40%, #c9953c 75%, #8b6914);
+  box-shadow: 0 0 8px rgba(240, 194, 127, 0.5), 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.4);
 }
 
 /* ── Opening states ── */
@@ -575,9 +543,7 @@ body::before {
   <div class="door-wrapper" id="doorClick">
     <div class="door-frame">
       <div class="door-body">
-        <div class="door-handle" id="doorHandle">
-          <div class="door-handle-lever" id="doorHandleLever"></div>
-        </div>
+        <div class="door-handle" id="doorHandle"></div>
       </div>
     </div>
     <div class="door-label">
@@ -628,7 +594,6 @@ const searchForm   = document.getElementById('searchForm');
 const placeInput   = document.getElementById('placeInput');
 const openBtn      = document.getElementById('openBtn');
 const doorHandle   = document.getElementById('doorHandle');
-const doorHandleLever = document.getElementById('doorHandleLever');
 const doorAnim     = document.getElementById('doorAnim');
 
 let isOpening = false;
@@ -740,13 +705,11 @@ searchForm.addEventListener('submit', e => { e.preventDefault(); triggerSearch()
 doorHandle.addEventListener('click', e => { e.stopPropagation(); triggerSearch(); });
 
 async function handleTurnThenOpen(place) {
-  // Play door sounds and turn the handle
+  // Play door sounds
   playDoorSounds();
-  doorHandleLever.classList.add('turning');
 
-  // Let the handle turn animation play
-  await wait(400);
-  doorHandleLever.classList.remove('turning');
+  // Brief pause for the click sound
+  await wait(200);
 
   // Now proceed with the door open animation
   openDoor(place);
