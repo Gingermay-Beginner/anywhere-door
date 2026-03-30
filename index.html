@@ -773,6 +773,94 @@ body::before {
   transition: transform 0.3s ease;
 }
 
+/* ══════════════════════════════════════
+   STREET VIEW FULLSCREEN
+   ══════════════════════════════════════ */
+#streetview {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  background: #000;
+}
+
+#streetview.active {
+  display: block;
+}
+
+#streetview-pano {
+  width: 100%;
+  height: 100%;
+}
+
+#streetview-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  color: var(--text);
+  font-size: 1.1rem;
+  z-index: 201;
+  background: #000;
+}
+
+#streetview-loading .spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.sv-back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 210;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s;
+}
+
+.sv-back-btn:hover {
+  background: rgba(0,0,0,0.85);
+}
+
+.sv-fallback {
+  text-align: center;
+}
+
+.sv-fallback a {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.6rem 1.6rem;
+  border-radius: 30px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.sv-fallback a:hover {
+  opacity: 0.85;
+}
+
 /* scrollbar — just in case */
 ::-webkit-scrollbar { width: 0; height: 0; }
 </style>
@@ -832,7 +920,19 @@ body::before {
   </div>
 </div>
 
+<!-- ── Street View fullscreen ── -->
+<div id="streetview">
+  <button class="sv-back-btn" id="svBack">← Back</button>
+  <div id="streetview-loading">
+    <div class="spinner"></div>
+    <span>Opening the door…</span>
+  </div>
+  <div id="streetview-pano"></div>
+</div>
+
 <script>
+const GMAPS_API_KEY = 'AIzaSyD1Y6cgwKJBLTMP5729GYcbiPvZpZPR1Lo';
+
 const landing      = document.getElementById('landing');
 const searchForm   = document.getElementById('searchForm');
 const placeInput   = document.getElementById('placeInput');
@@ -841,8 +941,14 @@ const doorHandle   = document.getElementById('doorHandle');
 const doorAnim     = document.getElementById('doorAnim');
 const hintText     = document.getElementById('hintText');
 const doorWrapper  = document.getElementById('doorClick');
+const streetview   = document.getElementById('streetview');
+const svBack       = document.getElementById('svBack');
+const svLoading    = document.getElementById('streetview-loading');
+const svPano       = document.getElementById('streetview-pano');
 
 let isOpening = false;
+let gmapsLoaded = false;
+let gmapsLoadPromise = null;
 let lastHasText = false;
 
 const HINT_DEFAULT = 'Type a place to begin';
@@ -1138,6 +1244,101 @@ async function handleTurnThenOpen(place) {
   openDoor(place);
 }
 
+// ── Google Maps API loader ──
+function loadGoogleMapsAPI() {
+  if (gmapsLoaded) return Promise.resolve();
+  if (gmapsLoadPromise) return gmapsLoadPromise;
+  gmapsLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_API_KEY}`;
+    script.async = true;
+    script.onload = () => { gmapsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('Failed to load Google Maps API'));
+    document.head.appendChild(script);
+  });
+  return gmapsLoadPromise;
+}
+
+// ── Geocode place name to coordinates ──
+async function geocodePlace(place) {
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(place)}&key=${GMAPS_API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status === 'OK' && data.results.length > 0) {
+    return data.results[0].geometry.location; // { lat, lng }
+  }
+  return null;
+}
+
+// ── Show Street View panorama ──
+async function showStreetView(place) {
+  svLoading.style.display = 'flex';
+  svPano.innerHTML = '';
+  streetview.classList.add('active');
+
+  try {
+    // Load API and geocode in parallel
+    const [, coords] = await Promise.all([loadGoogleMapsAPI(), geocodePlace(place)]);
+
+    if (!coords) {
+      showSVFallback(place, 'Could not find this location');
+      return;
+    }
+
+    const location = new google.maps.LatLng(coords.lat, coords.lng);
+    const svService = new google.maps.StreetViewService();
+
+    svService.getPanorama({ location, radius: 500 }, (data, status) => {
+      if (status === google.maps.StreetViewStatus.OK) {
+        svLoading.style.display = 'none';
+        new google.maps.StreetViewPanorama(svPano, {
+          position: data.location.latLng,
+          pov: { heading: 0, pitch: 0 },
+          zoom: 1,
+          linksControl: true,
+          panControl: true,
+          enableCloseButton: false,
+          fullscreenControl: false,
+        });
+      } else {
+        showSVFallback(place, 'No street view available here');
+      }
+    });
+  } catch (err) {
+    showSVFallback(place, 'Failed to load Street View');
+  }
+}
+
+function showSVFallback(place, message) {
+  const encoded = encodeURIComponent(place);
+  svLoading.innerHTML = `
+    <div class="sv-fallback">
+      <p>${message}</p>
+      <a href="https://www.google.com/maps/search/${encoded}/@0,0,12z/data=!3m1!4b1" target="_blank">Open in Google Maps</a>
+    </div>`;
+}
+
+// ── Back button ──
+svBack.addEventListener('click', () => {
+  streetview.classList.remove('active');
+  svPano.innerHTML = '';
+  svLoading.style.display = 'flex';
+  svLoading.innerHTML = '<div class="spinner"></div><span>Opening the door…</span>';
+  resetLanding();
+});
+
+function resetLanding() {
+  doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
+  landing.classList.remove('hidden');
+  placeInput.value = '';
+  openBtn.classList.remove('visible');
+  doorWrapper.classList.remove('has-text');
+  hintText.textContent = HINT_DEFAULT;
+  lastHasText = false;
+  placeInput.focus();
+  isOpening = false;
+}
+
 async function openDoor(place) {
   landing.classList.add('hidden');
 
@@ -1163,21 +1364,9 @@ async function openDoor(place) {
   // Let the step-through light expand to fill the screen
   await wait(600);
 
-  // Open satellite view directly
-  const encoded = encodeURIComponent(place);
-  window.open(`https://www.google.com/maps/search/${encoded}/@0,0,12z/data=!3m1!4b1`, '_blank');
-
-  // Reset for next use
-  await wait(300);
+  // Hide door animation, show Street View
   doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
-  landing.classList.remove('hidden');
-  placeInput.value = '';
-  openBtn.classList.remove('visible');
-  doorWrapper.classList.remove('has-text');
-  hintText.textContent = HINT_DEFAULT;
-  lastHasText = false;
-  placeInput.focus();
-  isOpening = false;
+  showStreetView(place);
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
