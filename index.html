@@ -75,6 +75,15 @@ body::before {
   pointer-events: none;
 }
 
+#landing.returning {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+#landing.returning.fade-in {
+  opacity: 1;
+}
+
 /* ── Door illustration ── */
 .door-wrapper {
   position: relative;
@@ -278,7 +287,7 @@ body::before {
 /* ── Search input ── */
 .search-row {
   width: 60%;
-  max-width: 420px;
+  max-width: 340px;
   margin: 0 auto;
 }
 
@@ -310,10 +319,45 @@ body::before {
   outline: none;
 }
 
-.search-row input::placeholder { color: var(--text-dim); }
+.search-row input::placeholder { color: transparent; }
 
 .search-row input {
   border-radius: 60px;
+}
+
+/* Fake placeholder with marquee */
+.search-row form {
+  position: relative;
+}
+.placeholder-marquee {
+  position: absolute;
+  left: 1.5rem;
+  right: 3.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  overflow: hidden;
+  pointer-events: none;
+  height: 1.2em;
+  line-height: 1.2em;
+}
+.placeholder-marquee span {
+  display: inline-block;
+  white-space: nowrap;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 16px;
+  padding-left: 0%;
+  /* No animation by default — text is clipped/truncated */
+}
+.placeholder-marquee span.scrolling {
+  animation: marquee-scroll 5s linear infinite;
+  animation-delay: 0.4s;
+}
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(0); }
+  85%  { transform: translateX(var(--marquee-offset, -40%)); }
+  100% { transform: translateX(var(--marquee-offset, -40%)); }
 }
 
 /* Open button inside input */
@@ -1116,6 +1160,7 @@ body::before {
   <div class="search-row">
     <form id="searchForm">
       <input type="text" id="placeInput" placeholder="" autocomplete="off" autofocus inputmode="text" />
+      <div class="placeholder-marquee" id="placeholderMarquee"><span></span></div>
 
       <button type="submit" class="open-btn" id="openBtn">Open</button>
     </form>
@@ -1188,6 +1233,8 @@ const doorWrapper  = document.getElementById('doorClick');
 const streetview   = document.getElementById('streetview');
 const svLoading    = document.getElementById('streetview-loading');
 const svPano       = document.getElementById('streetview-pano');
+const marqueeEl    = document.getElementById('placeholderMarquee');
+const marqueeSpan  = marqueeEl.querySelector('span');
 
 let isOpening = false;
 let gmapsLoaded = false;
@@ -1201,19 +1248,53 @@ const PLACEHOLDERS = [
 ];
 let currentPlaceholder = -1;
 
+function setMarqueeText(text) {
+  marqueeSpan.textContent = text;
+  marqueeSpan.classList.remove('scrolling');
+  // Calculate how far to scroll based on overflow
+  const containerW = marqueeEl.offsetWidth;
+  const textW = marqueeSpan.scrollWidth;
+  if (textW > containerW) {
+    const offset = -(textW - containerW);
+    marqueeSpan.style.setProperty('--marquee-offset', offset + 'px');
+  } else {
+    marqueeSpan.style.setProperty('--marquee-offset', '0px');
+  }
+}
+
+function showMarquee(show) {
+  marqueeEl.style.display = show ? '' : 'none';
+}
+
 function pickPlaceholder() {
   let next;
   do { next = Math.floor(Math.random() * PLACEHOLDERS.length); }
   while (next === currentPlaceholder && PLACEHOLDERS.length > 1);
   currentPlaceholder = next;
-  placeInput.placeholder = PLACEHOLDERS[next];
+  setMarqueeText(PLACEHOLDERS[next]);
 }
 
 // Set initial placeholder
-placeInput.placeholder = (() => {
-  currentPlaceholder = Math.floor(Math.random() * PLACEHOLDERS.length);
-  return PLACEHOLDERS[currentPlaceholder];
-})();
+currentPlaceholder = Math.floor(Math.random() * PLACEHOLDERS.length);
+setMarqueeText(PLACEHOLDERS[currentPlaceholder]);
+
+// Hide marquee on focus, show on blur if empty
+placeInput.addEventListener('focus', () => showMarquee(false));
+placeInput.addEventListener('blur', () => {
+  if (!placeInput.value.trim()) showMarquee(true);
+});
+
+// Hover over input area: start marquee scroll; leave: stop/reset
+searchForm.addEventListener('mouseenter', () => {
+  if (marqueeEl.style.display !== 'none') {
+    marqueeSpan.classList.add('scrolling');
+  }
+});
+searchForm.addEventListener('mouseleave', () => {
+  if (document.activeElement !== placeInput) {
+    marqueeSpan.classList.remove('scrolling');
+  }
+});
 
 const HINT_DEFAULT = 'Type a place to begin';
 const HINT_ACTIVE  = 'Press Enter or click Open';
@@ -1224,10 +1305,12 @@ function handleInputChange() {
   if (hasText) {
     openBtn.classList.add('visible');
     doorWrapper.classList.add('has-text');
+    showMarquee(false);
   } else {
     openBtn.classList.remove('visible');
     doorWrapper.classList.remove('has-text');
     if (lastHasText) pickPlaceholder();
+    if (document.activeElement !== placeInput) showMarquee(true);
   }
 
   // Fade-swap hint text when state changes
@@ -1698,9 +1781,36 @@ returnDoor.addEventListener('click', async () => {
   doorCloseAnim.classList.add('closed');
   await wait(400);
 
-  // Clean up and return to landing
+  // Prepare landing page behind the close overlay (invisible)
+  destroyPanorama();
+  streetview.classList.remove('active');
+  svLoading.style.display = 'flex';
+  svLoading.innerHTML = '<div class="spinner"></div><span>Opening the door…</span>';
+
+  // Reset landing state while hidden behind overlay
+  doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
+  placeInput.value = '';
+  pickPlaceholder();
+  showMarquee(true);
+  openBtn.classList.remove('visible');
+  doorWrapper.classList.remove('has-text');
+  hintText.textContent = HINT_DEFAULT;
+  lastHasText = false;
+  isOpening = false;
+
+  // Show landing at opacity 0, positioned and ready
+  landing.classList.remove('hidden');
+  landing.classList.add('returning');
+  void landing.offsetHeight; // force layout so transition works
+
+  // Remove close overlay and fade landing in together
   doorCloseAnim.classList.remove('active', 'closing', 'closed');
-  leaveStreetView();
+  landing.classList.add('fade-in');
+
+  // After fade completes, clean up classes
+  await wait(650);
+  landing.classList.remove('returning', 'fade-in');
+  placeInput.focus();
 });
 
 function resetLanding() {
@@ -1708,6 +1818,7 @@ function resetLanding() {
   landing.classList.remove('hidden');
   placeInput.value = '';
   pickPlaceholder();
+  showMarquee(true);
   openBtn.classList.remove('visible');
   doorWrapper.classList.remove('has-text');
   hintText.textContent = HINT_DEFAULT;
