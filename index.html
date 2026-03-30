@@ -1728,22 +1728,35 @@ async function showStreetView(place) {
     const location = new google.maps.LatLng(coords.lat, coords.lng);
     const svService = new google.maps.StreetViewService();
 
-    svService.getPanorama({ location, radius: 500 }, (data, status) => {
-      if (status === google.maps.StreetViewStatus.OK) {
-        svLoading.style.display = 'none';
-        currentPanorama = new google.maps.StreetViewPanorama(svPano, {
-          position: data.location.latLng,
-          pov: { heading: 0, pitch: 0 },
-          zoom: 1,
-          linksControl: true,
-          panControl: true,
-          enableCloseButton: false,
-          fullscreenControl: false,
+    // Try progressively larger radii to find nearest Street View
+    const radii = [200, 1000, 5000, 20000, 50000];
+    let found = false;
+
+    for (const radius of radii) {
+      await new Promise(resolve => {
+        svService.getPanorama({ location, radius, source: google.maps.StreetViewSource.OUTDOOR }, (data, status) => {
+          if (status === google.maps.StreetViewStatus.OK && !found) {
+            found = true;
+            svLoading.style.display = 'none';
+            currentPanorama = new google.maps.StreetViewPanorama(svPano, {
+              position: data.location.latLng,
+              pov: { heading: 0, pitch: 0 },
+              zoom: 1,
+              linksControl: true,
+              panControl: true,
+              enableCloseButton: false,
+              fullscreenControl: false,
+            });
+          }
+          resolve();
         });
-      } else {
-        showSVFallback(place, 'No street view available here');
-      }
-    });
+      });
+      if (found) break;
+    }
+
+    if (!found) {
+      showSVFallback(place, 'No street view available here');
+    }
   } catch (err) {
     showSVFallback(place, 'Failed to load Street View');
   }
