@@ -1854,6 +1854,7 @@ function leaveStreetView() {
 
 // ── Return door button — animated close ──
 returnDoor.addEventListener('click', async () => {
+  returnDoor.style.display = 'none'; // hide immediately, no door-in-door
   playDoorCloseSound();
 
   // Show close animation overlay on top of street view
@@ -1914,6 +1915,7 @@ returnDoor.addEventListener('click', async () => {
 });
 
 function resetLanding() {
+  returnDoor.style.display = ''; // restore for next street view visit
   doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
   landing.classList.remove('hidden');
   placeInput.value = '';
