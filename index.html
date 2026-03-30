@@ -1711,14 +1711,45 @@ async function geocodePlace(place) {
 }
 
 // ── Show Street View panorama ──
+// ── Curated Street View spots (keyword → pano + POV) ──
+const CURATED_SPOTS = [
+  {
+    keywords: ['法国', 'france', '巴黎', 'paris', '埃菲尔', 'eiffel'],
+    pano: 'f-ouK7bxmBzLT9S9-tKCQw',
+    pov: { heading: 156.83, pitch: -3.75 }
+  },
+];
+
+function getCuratedSpot(place) {
+  const lower = place.toLowerCase();
+  return CURATED_SPOTS.find(s => s.keywords.some(kw => lower.includes(kw))) || null;
+}
+
 async function showStreetView(place) {
   svLoading.style.display = 'flex';
   svPano.innerHTML = '';
   streetview.classList.add('active');
 
   try {
-    // Load API and geocode in parallel
-    const [, coords] = await Promise.all([loadGoogleMapsAPI(), geocodePlace(place)]);
+    await loadGoogleMapsAPI();
+
+    // Check curated spots first
+    const curated = getCuratedSpot(place);
+    if (curated) {
+      svLoading.style.display = 'none';
+      currentPanorama = new google.maps.StreetViewPanorama(svPano, {
+        pano: curated.pano,
+        pov: { ...curated.pov, zoom: 1 },
+        linksControl: true,
+        panControl: true,
+        enableCloseButton: false,
+        fullscreenControl: false,
+      });
+      return;
+    }
+
+    // Fall through to geocode
+    const coords = await geocodePlace(place);
 
     if (!coords) {
       showSVFallback(place, 'Could not find this location');
