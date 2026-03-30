@@ -1571,8 +1571,7 @@ function detectEasterEgg(place) {
     '半月湾', 'half moon bay',
     '巨杉国家公园', 'sequoia national park', 'sequoia',
     '夏威夷', 'hawaii',
-    '夏威夷火山国家公园', 'hawaii volcanoes', 'volcanoes national park',
-    '夏威夷大岛', 'big island', '北京', 'beijing',
+    '北京', 'beijing',
   ];
   if (heartKeywords.some(kw => lower.includes(kw))) return 'hearts';
   return null;
@@ -1728,6 +1727,11 @@ const CURATED_SPOTS = [
     pano: 'CIHM0ogKEICAgIC2sMze8AE',
     coords: { lat: 35.02984, lng: 135.7133617 },
     pov: { heading: 74.17, pitch: 10.4 }
+  },
+  {
+    keywords: ['火山', '火山国家公园', '夏威夷火山', 'hawaii volcanoes', 'volcanoes national park', 'big island'],
+    pano: 'tWUvK3e5vLs6Nucds8Jhiw',
+    pov: { heading: 216.61, pitch: 14.31 }
   },
   {
     keywords: ['东京', 'tokyo', '东京铁塔', 'tokyo tower'],
