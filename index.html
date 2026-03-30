@@ -1725,6 +1725,7 @@ const CURATED_SPOTS = [
   },
   {
     keywords: ['京都', 'kyoto', '御室桜', '御室'],
+    pano: 'CIHM0ogKEICAgIC2sMze8AE',
     coords: { lat: 35.02984, lng: 135.7133617 },
     pov: { heading: 74.17, pitch: 10.4 }
   },
@@ -1735,6 +1736,7 @@ const CURATED_SPOTS = [
   },
   {
     keywords: ['日本', 'japan', '河津', 'kawazu', '伊豆', 'izu'],
+    pano: 'CIHM0ogKEICAgIDhpK_ZpAE',
     coords: { lat: 34.7445733, lng: 138.9958094 },
     pov: { heading: 9.05, pitch: 5.46 }
   },
@@ -1757,7 +1759,7 @@ async function showStreetView(place) {
     const curated = getCuratedSpot(place);
     if (curated) {
       if (curated.pano) {
-        // Direct pano ID (official Google Street View)
+        // Try pano ID first; if it fails, fall through to coords
         svLoading.style.display = 'none';
         currentPanorama = new google.maps.StreetViewPanorama(svPano, {
           pano: curated.pano,
@@ -1767,7 +1769,24 @@ async function showStreetView(place) {
           enableCloseButton: false,
           fullscreenControl: false,
         });
-      } else if (curated.coords) {
+        // Listen for pano_changed — if pano still empty after 3s, fallback to coords
+        if (curated.coords) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          const panoStatus = currentPanorama.getStatus ? currentPanorama.getStatus() : null;
+          if (!svPano.querySelector('canvas') && !svPano.querySelector('img')) {
+            // Pano failed, destroy and try coords
+            destroyPanorama();
+            svPano.innerHTML = '';
+            svLoading.style.display = 'flex';
+            // fall through to coords below
+          } else {
+            return;
+          }
+        } else {
+          return;
+        }
+      }
+      if (curated.coords) {
         // Coords-based: find nearest official Street View
         const location = new google.maps.LatLng(curated.coords.lat, curated.coords.lng);
         const svService = new google.maps.StreetViewService();
