@@ -1911,11 +1911,11 @@ returnDoor.addEventListener('click', async () => {
   doorCloseAnim.style.transform = '';
   doorCloseAnim.style.opacity = '';
   landing.classList.remove('returning', 'fade-in');
+  returnDoor.style.display = ''; // restore for next street view visit
   placeInput.focus();
 });
 
 function resetLanding() {
-  returnDoor.style.display = ''; // restore for next street view visit
   doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
   landing.classList.remove('hidden');
   placeInput.value = '';
