@@ -943,18 +943,21 @@ body::before {
 .return-door-btn:hover {
   transform: translateX(-50%) scale(1.7);
   bottom: 57px;
-  background: rgba(30, 30, 50, 0.9);
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
   padding: 0.6rem;
-  box-shadow:
-    0 0 35px rgba(233, 69, 96, 0.5),
-    0 0 60px rgba(233, 69, 96, 0.25),
-    0 2px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: none;
 }
 
 .return-door-btn:hover .return-label {
   opacity: 0;
   width: 0;
   margin: 0;
+}
+
+.return-door-btn:hover .mini-door {
+  box-shadow: 0 0 20px rgba(233, 69, 96, 0.9), 0 0 40px rgba(233, 69, 96, 0.5);
 }
 
 .return-door-btn:active {
