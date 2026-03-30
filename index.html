@@ -1235,7 +1235,7 @@ body::before {
   <div class="search-row">
     <form id="searchForm">
       <input type="text" id="placeInput" placeholder="Type a place to begin" autocomplete="off" autofocus inputmode="text" />
-      <div class="placeholder-marquee" id="placeholderMarquee" style="display:none"><span></span></div>
+      <div class="placeholder-marquee" id="placeholderMarquee" style="display:none !important; visibility:hidden"><span></span></div>
 
       <button type="submit" class="open-btn" id="openBtn">Open</button>
     </form>
@@ -1338,7 +1338,8 @@ function setMarqueeText(text) {
 }
 
 function showMarquee(show) {
-  marqueeEl.style.display = show ? '' : 'none';
+  // marquee disabled — using native placeholder instead
+  marqueeEl.style.display = 'none';
 }
 
 function pickPlaceholder() {
