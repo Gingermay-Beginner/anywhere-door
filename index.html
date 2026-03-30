@@ -1048,25 +1048,30 @@ body::before {
   position: fixed;
   pointer-events: none;
   z-index: 1;
-  width: 80px;
-  height: 2px;
-  border-radius: 1px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0));
+  width: var(--len, 80px);
+  height: 3px;
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.03) 25%,
+    rgba(255,255,255,0.1) 55%,
+    rgba(255,255,255,0.35) 80%,
+    rgba(255,255,255,0.7) 100%
+  );
+  clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
   opacity: 0;
   animation: shootingStar var(--duration) linear forwards;
 }
 
 .shooting-star.bright {
-  width: 120px;
-  height: 3px;
-  filter: drop-shadow(0 0 4px rgba(255,255,255,0.6));
+  height: 4px;
+  filter: drop-shadow(0 0 3px rgba(255,255,255,0.4));
 }
 
 @keyframes shootingStar {
-  0% { opacity: 0; transform: translate(0, 0); }
-  5% { opacity: 1; }
-  70% { opacity: 0.6; }
-  100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+  0%   { opacity: 0;   transform: translate(0, 0) rotate(var(--rot)); }
+  8%   { opacity: var(--peak, 0.55); }
+  60%  { opacity: calc(var(--peak, 0.55) * 0.6); }
+  100% { opacity: 0;   transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
 }
 
 /* scrollbar — just in case */
@@ -1743,6 +1748,12 @@ function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
     const bright = Math.random() < 0.2;
     if (bright) star.classList.add('bright');
 
+    // Randomize tail length and peak opacity
+    const tailLen = 60 + Math.random() * 60; // 60-120px
+    const peak = 0.5 + Math.random() * 0.2;  // 0.5-0.7
+    star.style.setProperty('--len', tailLen + 'px');
+    star.style.setProperty('--peak', peak);
+
     // Start in upper-right quadrant
     const startX = 50 + Math.random() * 45; // 50-95% from left
     const startY = Math.random() * 35;       // 0-35% from top
@@ -1760,9 +1771,9 @@ function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
     star.style.setProperty('--dx', dx + 'px');
     star.style.setProperty('--dy', dy + 'px');
     star.style.setProperty('--duration', duration + 's');
-    // Rotate to match travel direction
+    // Rotate so the bright head (right end) points in movement direction
     const rotDeg = Math.atan2(-dy, dx) * 180 / Math.PI;
-    star.style.transform = 'rotate(' + (-rotDeg) + 'deg)';
+    star.style.setProperty('--rot', (-rotDeg) + 'deg');
 
     document.body.appendChild(star);
 
