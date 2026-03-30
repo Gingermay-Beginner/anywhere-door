@@ -907,7 +907,7 @@ body::before {
   box-shadow:
     0 0 20px rgba(233, 69, 96, 0.3),
     0 2px 12px rgba(0, 0, 0, 0.4);
-  transition: transform 0.4s ease-out, box-shadow 0.4s ease-out, background 0.4s ease-out, padding 0.4s ease-out;
+  transition: transform 0.4s ease-out, bottom 0.4s ease-out, box-shadow 0.4s ease-out, background 0.4s ease-out, padding 0.4s ease-out;
 }
 
 .return-door-btn .mini-door {
@@ -941,7 +941,8 @@ body::before {
 
 /* Hover state */
 .return-door-btn:hover {
-  transform: translateX(-50%) scale(1.7) translateY(-25px);
+  transform: translateX(-50%) scale(1.7);
+  bottom: 57px;
   background: rgba(30, 30, 50, 0.9);
   padding: 0.6rem;
   box-shadow:
@@ -957,7 +958,8 @@ body::before {
 }
 
 .return-door-btn:active {
-  transform: translateX(-50%) scale(1.6) translateY(-23px);
+  transform: translateX(-50%) scale(1.6);
+  bottom: 55px;
 }
 
 #streetview.active .return-door-btn {
