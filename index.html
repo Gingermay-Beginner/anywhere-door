@@ -1725,7 +1725,7 @@ const CURATED_SPOTS = [
   },
   {
     keywords: ['京都', 'kyoto', '御室桜', '御室'],
-    pano: 'CIHM0ogKEICAgIC2sMze8AE',
+    coords: { lat: 35.02984, lng: 135.7133617 },
     pov: { heading: 74.17, pitch: 10.4 }
   },
   {
@@ -1735,7 +1735,7 @@ const CURATED_SPOTS = [
   },
   {
     keywords: ['日本', 'japan', '河津', 'kawazu', '伊豆', 'izu'],
-    pano: 'CIHM0ogKEICAgIDhpK_ZpAE',
+    coords: { lat: 34.7445733, lng: 138.9958094 },
     pov: { heading: 9.05, pitch: 5.46 }
   },
 ];
@@ -1756,15 +1756,45 @@ async function showStreetView(place) {
     // Check curated spots first
     const curated = getCuratedSpot(place);
     if (curated) {
-      svLoading.style.display = 'none';
-      currentPanorama = new google.maps.StreetViewPanorama(svPano, {
-        pano: curated.pano,
-        pov: { ...curated.pov, zoom: 1 },
-        linksControl: true,
-        panControl: true,
-        enableCloseButton: false,
-        fullscreenControl: false,
-      });
+      if (curated.pano) {
+        // Direct pano ID (official Google Street View)
+        svLoading.style.display = 'none';
+        currentPanorama = new google.maps.StreetViewPanorama(svPano, {
+          pano: curated.pano,
+          pov: { ...curated.pov, zoom: 1 },
+          linksControl: true,
+          panControl: true,
+          enableCloseButton: false,
+          fullscreenControl: false,
+        });
+      } else if (curated.coords) {
+        // Coords-based: find nearest official Street View
+        const location = new google.maps.LatLng(curated.coords.lat, curated.coords.lng);
+        const svService = new google.maps.StreetViewService();
+        const radii = [500, 2000, 10000];
+        let found = false;
+        for (const radius of radii) {
+          await new Promise(resolve => {
+            svService.getPanorama({ location, radius, source: google.maps.StreetViewSource.OUTDOOR }, (data, status) => {
+              if (status === google.maps.StreetViewStatus.OK && !found) {
+                found = true;
+                svLoading.style.display = 'none';
+                currentPanorama = new google.maps.StreetViewPanorama(svPano, {
+                  position: data.location.latLng,
+                  pov: { ...curated.pov, zoom: 1 },
+                  linksControl: true,
+                  panControl: true,
+                  enableCloseButton: false,
+                  fullscreenControl: false,
+                });
+              }
+              resolve();
+            });
+          });
+          if (found) break;
+        }
+        if (!found) showSVFallback(place, 'No street view available here');
+      }
       return;
     }
 
