@@ -319,7 +319,7 @@ body::before {
   outline: none;
 }
 
-.search-row input::placeholder { color: transparent; }
+.search-row input::placeholder { color: rgba(255,255,255,0.35); }
 
 .search-row input {
   border-radius: 60px;
@@ -1219,8 +1219,8 @@ body::before {
 
   <div class="search-row">
     <form id="searchForm">
-      <input type="text" id="placeInput" placeholder="" autocomplete="off" autofocus inputmode="text" />
-      <div class="placeholder-marquee" id="placeholderMarquee"><span></span></div>
+      <input type="text" id="placeInput" placeholder="Type a place to begin" autocomplete="off" autofocus inputmode="text" />
+      <div class="placeholder-marquee" id="placeholderMarquee" style="display:none"><span></span></div>
 
       <button type="submit" class="open-btn" id="openBtn">Open</button>
     </form>
@@ -1304,7 +1304,7 @@ let lastHasText = false;
 const PLACEHOLDERS = [
   'Where your heart wants to go',
   'The place you keep thinking about',
-  'Type a place to begin'
+  'Where would you run to?'
 ];
 let currentPlaceholder = -1;
 
@@ -1356,7 +1356,23 @@ searchForm.addEventListener('mouseleave', () => {
   }
 });
 
-const HINT_DEFAULT = 'Where would you run to?';
+const HINT_PHRASES = [
+  'Where your heart wants to go',
+  'The place you keep thinking about',
+  'Where would you run to?'
+];
+let currentHintIndex = Math.floor(Math.random() * HINT_PHRASES.length);
+hintText.textContent = HINT_PHRASES[currentHintIndex];
+
+function pickHint() {
+  let next;
+  do { next = Math.floor(Math.random() * HINT_PHRASES.length); }
+  while (next === currentHintIndex && HINT_PHRASES.length > 1);
+  currentHintIndex = next;
+  hintText.textContent = HINT_PHRASES[currentHintIndex];
+}
+
+const HINT_DEFAULT = null; // now handled by pickHint()
 const HINT_ACTIVE  = 'Press Enter or click Open';
 
 // Show/hide Open button, light leak, and hint text based on input content
@@ -1378,7 +1394,7 @@ function handleInputChange() {
     lastHasText = hasText;
     hintText.classList.add('fading');
     setTimeout(() => {
-      hintText.textContent = hasText ? HINT_ACTIVE : HINT_DEFAULT;
+      if (hasText) { hintText.textContent = HINT_ACTIVE; } else { pickHint(); }
       hintText.classList.remove('fading');
     }, 300);
   }
@@ -1856,7 +1872,7 @@ returnDoor.addEventListener('click', async () => {
   showMarquee(true);
   openBtn.classList.remove('visible');
   doorWrapper.classList.remove('has-text');
-  hintText.textContent = HINT_DEFAULT;
+  pickHint();
   lastHasText = false;
   isOpening = false;
 
@@ -1890,7 +1906,7 @@ function resetLanding() {
   showMarquee(true);
   openBtn.classList.remove('visible');
   doorWrapper.classList.remove('has-text');
-  hintText.textContent = HINT_DEFAULT;
+  pickHint();
   lastHasText = false;
   placeInput.focus();
   isOpening = false;
