@@ -1563,7 +1563,7 @@ doorWrapper.addEventListener('click', () => { triggerSearch(); });
 // ── Easter egg detection ──
 function detectEasterEgg(place) {
   const lower = place.toLowerCase();
-  if (lower.includes('tokyo') || lower.includes('东京') || lower.includes('とうきょう')) return 'tokyo';
+  if (lower.includes('tokyo') || lower.includes('とうきょう')) return 'tokyo';
   if (lower.includes('arctic') || lower.includes('北极') || lower.includes('north pole')) return 'arctic';
   // Hearts locations
   const heartKeywords = [
@@ -1728,6 +1728,11 @@ const CURATED_SPOTS = [
     pano: 'CIHM0ogKEICAgIC2sMze8AE',
     coords: { lat: 35.02984, lng: 135.7133617 },
     pov: { heading: 74.17, pitch: 10.4 }
+  },
+  {
+    keywords: ['东京', 'tokyo', '东京铁塔', 'tokyo tower'],
+    pano: 'nemDI0045pfUe00lVdetqg',
+    pov: { heading: 302.06, pitch: -40.77 }
   },
   {
     keywords: ['旧金山', '旧金山市', 'san francisco', 'sf'],
