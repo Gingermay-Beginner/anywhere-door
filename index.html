@@ -1043,6 +1043,32 @@ body::before {
   .return-door-btn { bottom: 24px; font-size: 0.85rem; padding: 0.5rem 1.1rem; }
 }
 
+/* ── Shooting stars ── */
+.shooting-star {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1;
+  width: 80px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(255,255,255,0));
+  opacity: 0;
+  animation: shootingStar var(--duration) linear forwards;
+}
+
+.shooting-star.bright {
+  width: 120px;
+  height: 3px;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.6));
+}
+
+@keyframes shootingStar {
+  0% { opacity: 0; transform: translate(0, 0); }
+  5% { opacity: 1; }
+  70% { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+}
+
 /* scrollbar — just in case */
 ::-webkit-scrollbar { width: 0; height: 0; }
 </style>
@@ -1701,6 +1727,78 @@ function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
       setKeyboardState(ratio < THRESHOLD);
     });
   }
+})();
+
+// ── Shooting stars (landing page only) ──
+(function() {
+  let timer = null;
+
+  function spawnStar() {
+    if (landing.classList.contains('hidden')) return;
+
+    const star = document.createElement('div');
+    star.className = 'shooting-star';
+
+    // 1 in 5 chance of a brighter star
+    const bright = Math.random() < 0.2;
+    if (bright) star.classList.add('bright');
+
+    // Start in upper-right quadrant
+    const startX = 50 + Math.random() * 45; // 50-95% from left
+    const startY = Math.random() * 35;       // 0-35% from top
+
+    // Angle 210-240 degrees (down-left)
+    const angle = (210 + Math.random() * 30) * Math.PI / 180;
+    const dist = 200 + Math.random() * 150;
+    const dx = Math.cos(angle) * dist;
+    const dy = -Math.sin(angle) * dist; // CSS Y is inverted
+
+    const duration = 0.8 + Math.random() * 0.4; // 0.8-1.2s
+
+    star.style.left = startX + 'vw';
+    star.style.top = startY + 'vh';
+    star.style.setProperty('--dx', dx + 'px');
+    star.style.setProperty('--dy', dy + 'px');
+    star.style.setProperty('--duration', duration + 's');
+    // Rotate to match travel direction
+    const rotDeg = Math.atan2(-dy, dx) * 180 / Math.PI;
+    star.style.transform = 'rotate(' + (-rotDeg) + 'deg)';
+
+    document.body.appendChild(star);
+
+    // Clean up after animation
+    star.addEventListener('animationend', () => star.remove());
+    // Fallback cleanup
+    setTimeout(() => { if (star.parentNode) star.remove(); }, (duration + 0.5) * 1000);
+  }
+
+  function scheduleNext() {
+    const delay = 4000 + Math.random() * 4000; // 4-8s
+    timer = setTimeout(() => {
+      spawnStar();
+      scheduleNext();
+    }, delay);
+  }
+
+  function startStars() {
+    if (timer) return;
+    scheduleNext();
+  }
+
+  function stopStars() {
+    clearTimeout(timer);
+    timer = null;
+  }
+
+  // Watch landing visibility
+  const obs = new MutationObserver(() => {
+    if (landing.classList.contains('hidden')) stopStars();
+    else startStars();
+  });
+  obs.observe(landing, { attributes: true, attributeFilter: ['class'] });
+
+  // Start immediately
+  startStars();
 })();
 </script>
 </body>
