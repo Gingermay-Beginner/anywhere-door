@@ -1049,7 +1049,7 @@ body::before {
   pointer-events: none;
   z-index: 1;
   width: var(--len, 80px);
-  height: 3px;
+  height: 1.5px;
   background: linear-gradient(90deg,
     rgba(255,255,255,0) 0%,
     rgba(255,255,255,0.03) 25%,
@@ -1057,14 +1057,14 @@ body::before {
     rgba(255,255,255,0.35) 80%,
     rgba(255,255,255,0.7) 100%
   );
-  clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+  clip-path: polygon(0% 50%, 100% 20%, 100% 80%);
   opacity: 0;
   animation: shootingStar var(--duration) linear forwards;
 }
 
 .shooting-star.bright {
-  height: 4px;
-  filter: drop-shadow(0 0 3px rgba(255,255,255,0.4));
+  height: 2px;
+  filter: drop-shadow(0 0 2px rgba(255,255,255,0.3));
 }
 
 @keyframes shootingStar {
@@ -1738,28 +1738,28 @@ function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 (function() {
   let timer = null;
 
-  function spawnStar() {
+  function spawnStar(opts) {
     if (landing.classList.contains('hidden')) return;
 
     const star = document.createElement('div');
     star.className = 'shooting-star';
 
     // 1 in 5 chance of a brighter star
-    const bright = Math.random() < 0.2;
+    const bright = opts ? opts.bright : Math.random() < 0.2;
     if (bright) star.classList.add('bright');
 
     // Randomize tail length and peak opacity
-    const tailLen = 60 + Math.random() * 60; // 60-120px
-    const peak = 0.5 + Math.random() * 0.2;  // 0.5-0.7
+    const tailLen = 200 + Math.random() * 150; // 200-350px
+    const peak = opts ? opts.peak : (0.5 + Math.random() * 0.2);  // 0.5-0.7
     star.style.setProperty('--len', tailLen + 'px');
     star.style.setProperty('--peak', peak);
 
     // Start in upper-right quadrant
-    const startX = 50 + Math.random() * 45; // 50-95% from left
-    const startY = Math.random() * 35;       // 0-35% from top
+    const startX = opts ? opts.startX : (50 + Math.random() * 45); // 50-95% from left
+    const startY = opts ? opts.startY : (Math.random() * 35);       // 0-35% from top
 
     // Angle 210-240 degrees (down-left)
-    const angle = (210 + Math.random() * 30) * Math.PI / 180;
+    const angle = opts ? opts.angle : ((210 + Math.random() * 30) * Math.PI / 180);
     const dist = 200 + Math.random() * 150;
     const dx = Math.cos(angle) * dist;
     const dy = -Math.sin(angle) * dist; // CSS Y is inverted
@@ -1781,12 +1781,51 @@ function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
     star.addEventListener('animationend', () => star.remove());
     // Fallback cleanup
     setTimeout(() => { if (star.parentNode) star.remove(); }, (duration + 0.5) * 1000);
+
+    return { startX, startY, angle, bright, peak };
+  }
+
+  function spawnGroup() {
+    const roll = Math.random();
+    const info = spawnStar();
+    if (!info) return;
+
+    if (roll < 0.65) {
+      // 65%: single star — already spawned
+    } else if (roll < 0.90) {
+      // 25%: 2-star pair, staggered
+      const delay = 100 + Math.random() * 150; // 100-250ms
+      const offX = (Math.random() - 0.5) * 6;  // ±3vw
+      const offY = (Math.random() - 0.5) * 4;  // ±2vh
+      setTimeout(() => spawnStar({
+        startX: info.startX + offX,
+        startY: info.startY + offY,
+        angle: info.angle + (Math.random() - 0.5) * 0.08,
+        bright: Math.random() < 0.2,
+        peak: info.peak * (0.5 + Math.random() * 0.3)
+      }), delay);
+    } else {
+      // 10%: 3-star mini shower, spread across upper screen
+      for (let i = 1; i <= 2; i++) {
+        const delay = i * (80 + Math.random() * 120); // 80-200ms each
+        setTimeout(() => spawnStar({
+          startX: 50 + Math.random() * 45,
+          startY: Math.random() * 35,
+          angle: info.angle + (Math.random() - 0.5) * 0.15,
+          bright: Math.random() < 0.2,
+          peak: 0.4 + Math.random() * 0.25
+        }), delay);
+      }
+    }
   }
 
   function scheduleNext() {
-    const delay = 4000 + Math.random() * 4000; // 4-8s
+    // Irregular timing: 65% short gaps (3-5s), 35% long pauses (8-14s)
+    const delay = Math.random() < 0.65
+      ? 3000 + Math.random() * 2000   // 3-5s
+      : 8000 + Math.random() * 6000;  // 8-14s
     timer = setTimeout(() => {
-      spawnStar();
+      spawnGroup();
       scheduleNext();
     }, delay);
   }
