@@ -947,8 +947,7 @@ body::before {
   background: #000;
 }
 
-.return-door-btn .mini-door::after {
-  content: '';
+.return-door-btn .mini-knob {
   position: absolute;
   right: 3px;
   top: 50%;
@@ -957,7 +956,8 @@ body::before {
   height: 3px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #fff6d5, #f0c27f 60%, #c9953c);
-  z-index: 3;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .return-door-btn .return-label {
@@ -1246,7 +1246,7 @@ body::before {
 <!-- ── Street View fullscreen ── -->
 <div id="streetview">
   <button class="return-door-btn" id="returnDoor">
-    <span class="mini-door"></span> <span class="return-label">Return</span>
+    <span class="mini-door"><span class="mini-knob"></span></span> <span class="return-label">Return</span>
   </button>
   <div id="streetview-loading">
     <div class="spinner"></div>
