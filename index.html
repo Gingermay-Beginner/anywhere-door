@@ -805,6 +805,27 @@ body::before {
   </div>
 </div>
 
+<!-- ── Street View fullscreen ── -->
+<div id="streetviewScreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#000;">
+  <div id="streetviewMap" style="width:100%; height:100%;"></div>
+  <button id="backBtn" onclick="closeStreetView()" style="
+    position:absolute; top:20px; left:20px; z-index:10000;
+    background:rgba(0,0,0,0.65); color:#fff; border:1.5px solid rgba(255,255,255,0.3);
+    border-radius:24px; padding:10px 22px; font-size:15px; cursor:pointer;
+    font-family:inherit; backdrop-filter:blur(8px); letter-spacing:0.03em;
+    transition: background 0.2s;
+  " onmouseover="this.style.background='rgba(0,0,0,0.85)'" onmouseout="this.style.background='rgba(0,0,0,0.65)'">
+    ← 回到任意门
+  </button>
+  <div id="svPlaceName" style="
+    position:absolute; top:20px; left:50%; transform:translateX(-50%);
+    background:rgba(0,0,0,0.55); color:#fff; border-radius:20px;
+    padding:8px 20px; font-size:14px; letter-spacing:0.05em;
+    font-family:inherit; backdrop-filter:blur(8px); pointer-events:none;
+    border:1px solid rgba(255,255,255,0.2);
+  "></div>
+</div>
+
 <!-- ── Door‑open animation ── -->
 <div id="doorAnim">
   <div class="anim-scene">
@@ -1163,27 +1184,86 @@ async function openDoor(place) {
   // Let the step-through light expand to fill the screen
   await wait(600);
 
-  // Special street view links for specific locations
-  const specialLinks = {
-    '富士山': 'https://www.google.com/maps/place/Nagasaki+Park/@35.5215516,138.7573478,3a,75y,2.68h,88.21t/data=!3m8!1e1!3m6!1sCIHM0ogKEICAgIDh8aD2UA!2e10!3e11!6shttps:%2F%2Flh3.googleusercontent.com%2Fgpms-cs-s%2FAFfmt2Z6ffARtZqWWXazX3BKelbIK1cadrYlnX7X2l86WZGpoFT5VIgk-_R-YpP_JCl2qg1IhsJBoeHOmsN-iO7Ni7xlQirON3SsMW3g9CmDXl8xz_T0wH9-K5RL6yzPoNxfLGygWq9L%3Dw900-h600-k-no-pi1.788609877114638-ya2.6835976082412776-ro0-fo100!7i11968!8i5984!4m14!1m7!3m6!1s0x60195fb4a5043f4f:0x29cbb24b1e337d47!2z5rKz5Y-j5rmW!8m2!3d35.5170946!4d138.7517787!16zL20vMDZ0MXYw!3m5!1s0x60195f692ee10103:0x9a321460899ae0a8!8m2!3d35.5215516!4d138.7573478!16s%2Fg%2F11fmpclw0s?entry=ttu&g_ep=EgoyMDI2MDMyOS4wIKXMDSoASAFQAw%3D%3D',
-    'fuji': 'https://www.google.com/maps/place/Nagasaki+Park/@35.5215516,138.7573478,3a,75y,2.68h,88.21t/data=!3m8!1e1!3m6!1sCIHM0ogKEICAgIDh8aD2UA!2e10!3e11!6shttps:%2F%2Flh3.googleusercontent.com%2Fgpms-cs-s%2FAFfmt2Z6ffARtZqWWXazX3BKelbIK1cadrYlnX7X2l86WZGpoFT5VIgk-_R-YpP_JCl2qg1IhsJBoeHOmsN-iO7Ni7xlQirON3SsMW3g9CmDXl8xz_T0wH9-K5RL6yzPoNxfLGygWq9L%3Dw900-h600-k-no-pi1.788609877114638-ya2.6835976082412776-ro0-fo100!7i11968!8i5984!4m14!1m7!3m6!1s0x60195fb4a5043f4f:0x29cbb24b1e337d47!2z5rKz5Y-j5rmW!8m2!3d35.5170946!4d138.7517787!16zL20vMDZ0MXYw!3m5!1s0x60195f692ee10103:0x9a321460899ae0a8!8m2!3d35.5215516!4d138.7573478!16s%2Fg%2F11fmpclw0s?entry=ttu&g_ep=EgoyMDI2MDMyOS4wIKXMDSoASAFQAw%3D%3D',
-    'mount fuji': 'https://www.google.com/maps/place/Nagasaki+Park/@35.5215516,138.7573478,3a,75y,2.68h,88.21t/data=!3m8!1e1!3m6!1sCIHM0ogKEICAgIDh8aD2UA!2e10!3e11!6shttps:%2F%2Flh3.googleusercontent.com%2Fgpms-cs-s%2FAFfmt2Z6ffARtZqWWXazX3BKelbIK1cadrYlnX7X2l86WZGpoFT5VIgk-_R-YpP_JCl2qg1IhsJBoeHOmsN-iO7Ni7xlQirON3SsMW3g9CmDXl8xz_T0wH9-K5RL6yzPoNxfLGygWq9L%3Dw900-h600-k-no-pi1.788609877114638-ya2.6835976082412776-ro0-fo100!7i11968!8i5984!4m14!1m7!3m6!1s0x60195fb4a5043f4f:0x29cbb24b1e337d47!2z5rKz5Y-j5rmW!8m2!3d35.5170946!4d138.7517787!16zL20vMDZ0MXYw!3m5!1s0x60195f692ee10103:0x9a321460899ae0a8!8m2!3d35.5215516!4d138.7573478!16s%2Fg%2F11fmpclw0s?entry=ttu&g_ep=EgoyMDI2MDMyOS4wIKXMDSoASAFQAw%3D%3D',
-    '富士': 'https://www.google.com/maps/place/Nagasaki+Park/@35.5215516,138.7573478,3a,75y,2.68h,88.21t/data=!3m8!1e1!3m6!1sCIHM0ogKEICAgIDh8aD2UA!2e10!3e11!6shttps:%2F%2Flh3.googleusercontent.com%2Fgpms-cs-s%2FAFfmt2Z6ffARtZqWWXazX3BKelbIK1cadrYlnX7X2l86WZGpoFT5VIgk-_R-YpP_JCl2qg1IhsJBoeHOmsN-iO7Ni7xlQirON3SsMW3g9CmDXl8xz_T0wH9-K5RL6yzPoNxfLGygWq9L%3Dw900-h600-k-no-pi1.788609877114638-ya2.6835976082412776-ro0-fo100!7i11968!8i5984!4m14!1m7!3m6!1s0x60195fb4a5043f4f:0x29cbb24b1e337d47!2z5rKz5Y-j5rmW!8m2!3d35.5170946!4d138.7517787!16zL20vMDZ0MXYw!3m5!1s0x60195f692ee10103:0x9a321460899ae0a8!8m2!3d35.5215516!4d138.7573478!16s%2Fg%2F11fmpclw0s?entry=ttu&g_ep=EgoyMDI2MDMyOS4wIKXMDSoASAFQAw%3D%3D',
-  };
+  // Show street view inside the page
+  await openStreetView(place);
 
-  const lowerPlace = place.toLowerCase().trim();
-  const specialUrl = Object.entries(specialLinks).find(([k]) => lowerPlace.includes(k))?.[1];
+  // Reset door animation (street view screen is now showing)
+  doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
+  isOpening = false;
+}
 
-  if (specialUrl) {
-    window.open(specialUrl, '_blank');
-  } else {
-    const encoded = encodeURIComponent(place);
-    window.open(`https://www.google.com/maps/search/${encoded}/@0,0,12z/data=!3m1!4b1`, '_blank');
+// ── Special pinned coordinates (hand-picked great views) ──
+const PINNED_LOCATIONS = {
+  keywords: ['富士山', '富士', 'fuji', 'mount fuji'],
+  coords: { lat: 35.5215516, lng: 138.7573478 },
+  heading: 2.68,
+  pitch: 1.79,
+};
+
+function getPinnedCoords(place) {
+  const lower = place.toLowerCase();
+  if (PINNED_LOCATIONS.keywords.some(k => lower.includes(k))) {
+    return PINNED_LOCATIONS;
+  }
+  return null;
+}
+
+let svPanorama = null;
+
+async function openStreetView(place) {
+  const screen = document.getElementById('streetviewScreen');
+  const mapDiv = document.getElementById('streetviewMap');
+  const label  = document.getElementById('svPlaceName');
+
+  label.textContent = place;
+  screen.style.display = 'block';
+
+  // Load Maps JS API if not yet loaded
+  if (!window.google || !window.google.maps) {
+    await loadMapsAPI();
   }
 
-  // Reset for next use
-  await wait(300);
-  doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
+  const pinned = getPinnedCoords(place);
+
+  if (pinned) {
+    // Use hand-picked coordinates directly
+    svPanorama = new google.maps.StreetViewPanorama(mapDiv, {
+      position: { lat: pinned.coords.lat, lng: pinned.coords.lng },
+      pov: { heading: pinned.heading * 100, pitch: pinned.pitch },
+      zoom: 1,
+      addressControl: false,
+      fullscreenControl: false,
+      motionTracking: false,
+    });
+  } else {
+    // Geocode the place name then find nearest street view
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address: place }, (results, status) => {
+      if (status === 'OK') {
+        const loc = results[0].geometry.location;
+        svPanorama = new google.maps.StreetViewPanorama(mapDiv, {
+          position: loc,
+          pov: { heading: 0, pitch: 0 },
+          zoom: 1,
+          addressControl: false,
+          fullscreenControl: false,
+          motionTracking: false,
+        });
+      } else {
+        // Fallback: open in new tab
+        closeStreetView();
+        const encoded = encodeURIComponent(place);
+        window.open(`https://www.google.com/maps/search/${encoded}/@0,0,12z/data=!3m1!4b1`, '_blank');
+      }
+    });
+  }
+}
+
+function closeStreetView() {
+  const screen = document.getElementById('streetviewScreen');
+  screen.style.display = 'none';
+  svPanorama = null;
+  // Reset door for next use
   landing.classList.remove('hidden');
   placeInput.value = '';
   openBtn.classList.remove('visible');
@@ -1191,7 +1271,17 @@ async function openDoor(place) {
   hintText.textContent = HINT_DEFAULT;
   lastHasText = false;
   placeInput.focus();
-  isOpening = false;
+}
+
+function loadMapsAPI() {
+  return new Promise((resolve) => {
+    if (window.google && window.google.maps) { resolve(); return; }
+    window._mapsApiReady = resolve;
+    const s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyD1Y6cgwKJBLTMP5729GYcbiPvZpZPR1Lo&callback=_mapsApiReady';
+    s.async = true;
+    document.head.appendChild(s);
+  });
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
