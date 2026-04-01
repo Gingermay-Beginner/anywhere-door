@@ -75,15 +75,6 @@ body::before {
   pointer-events: none;
 }
 
-#landing.returning {
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-
-#landing.returning.fade-in {
-  opacity: 1;
-}
-
 /* ── Door illustration ── */
 .door-wrapper {
   position: relative;
@@ -287,7 +278,7 @@ body::before {
 /* ── Search input ── */
 .search-row {
   width: 60%;
-  max-width: 340px;
+  max-width: 420px;
   margin: 0 auto;
 }
 
@@ -319,45 +310,10 @@ body::before {
   outline: none;
 }
 
-.search-row input::placeholder { color: rgba(255,255,255,0.35); }
+.search-row input::placeholder { color: var(--text-dim); }
 
 .search-row input {
   border-radius: 60px;
-}
-
-/* Fake placeholder with marquee */
-.search-row form {
-  position: relative;
-}
-.placeholder-marquee {
-  position: absolute;
-  left: 1.5rem;
-  right: 3.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  overflow: hidden;
-  pointer-events: none;
-  height: 1.2em;
-  line-height: 1.2em;
-}
-.placeholder-marquee span {
-  display: inline-block;
-  white-space: nowrap;
-  color: var(--text-dim);
-  font-family: inherit;
-  font-size: 16px;
-  padding-left: 0%;
-  /* No animation by default — text is clipped/truncated */
-}
-.placeholder-marquee span.scrolling {
-  animation: marquee-scroll 5s linear infinite;
-  animation-delay: 0.4s;
-}
-@keyframes marquee-scroll {
-  0%   { transform: translateX(0); }
-  15%  { transform: translateX(0); }
-  85%  { transform: translateX(var(--marquee-offset, -40%)); }
-  100% { transform: translateX(var(--marquee-offset, -40%)); }
 }
 
 /* Open button inside input */
@@ -670,7 +626,7 @@ body::before {
 @media (max-width: 500px) {
   .door-frame { width: 120px; height: 180px; }
   .door-handle { right: 12px; }
-  .search-row { max-width: min(340px, 90vw); width: min(340px, 90vw); }
+  .search-row { max-width: 90vw; width: 90vw; }
   .search-row form { width: 100%; }
   .search-row input { text-align: left; padding: 0.9rem 1rem; font-size: 16px; width: 100%; }
   .anim-door-frame { width: 200px; height: 300px; }
@@ -817,399 +773,6 @@ body::before {
   transition: transform 0.3s ease;
 }
 
-/* ══════════════════════════════════════
-   STREET VIEW FULLSCREEN
-   ══════════════════════════════════════ */
-#streetview {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: none;
-  background: #000;
-}
-
-#streetview.active {
-  display: block;
-}
-
-#streetview-pano {
-  width: 100%;
-  height: 100%;
-}
-
-#streetview-loading {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 1rem;
-  color: var(--text);
-  font-size: 1.1rem;
-  z-index: 201;
-  background: #000;
-}
-
-#streetview-loading .spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid rgba(255,255,255,0.15);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.sv-fallback {
-  text-align: center;
-}
-
-.sv-fallback a {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.6rem 1.6rem;
-  border-radius: 30px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  transition: opacity 0.2s;
-}
-
-.sv-fallback a:hover {
-  opacity: 0.85;
-}
-
-/* ── Return Door Button (on Street View) ── */
-.return-door-btn {
-  position: fixed;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 220;
-  display: none;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.6rem 1.4rem;
-  border: none;
-  border-radius: 50px;
-  background: rgba(20, 20, 35, 0.75);
-  color: #fff;
-  font-family: inherit;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  box-shadow:
-    0 0 20px rgba(233, 69, 96, 0.3),
-    0 2px 12px rgba(0, 0, 0, 0.4);
-  transition: transform 0.4s ease-out, bottom 0.4s ease-out, box-shadow 0.4s ease-out, background 0.4s ease-out, padding 0.4s ease-out;
-}
-
-.return-door-btn .mini-door {
-  display: inline-block;
-  width: 16px;
-  height: 22px;
-  background: #111; /* dark interior */
-  border-radius: 4px 4px 1px 1px;
-  position: relative;
-  box-shadow: 0 0 10px rgba(233, 69, 96, 0.6);
-  perspective: 120px;
-  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
-}
-
-/* Door panel that swings open/closed, hinged on left */
-.return-door-btn .mini-door-panel {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(160deg, var(--door-pink), #e91e63);
-  border-radius: 4px 4px 1px 1px;
-  transform-origin: left center;
-  animation: doorPeek 4.3s ease-in-out infinite;
-  z-index: 2;
-}
-
-@keyframes doorPeek {
-  0%        { transform: rotateY(0deg); }
-  18.6%     { transform: rotateY(-40deg); }
-  27.9%     { transform: rotateY(-40deg); }
-  41.9%     { transform: rotateY(0deg); }
-  100%      { transform: rotateY(0deg); }
-}
-
-@keyframes doorSpring {
-  0%        { transform: rotateY(0deg); }
-  12%       { transform: rotateY(-50deg); }
-  20%       { transform: rotateY(-15deg); }
-  28%       { transform: rotateY(-40deg); }
-  36%       { transform: rotateY(-20deg); }
-  44%       { transform: rotateY(-35deg); }
-  52%       { transform: rotateY(-25deg); }
-  60%       { transform: rotateY(-30deg); }
-  66%       { transform: rotateY(-28deg); }
-  72%       { transform: rotateY(-30deg); }
-  88%       { transform: rotateY(0deg); }
-  100%      { transform: rotateY(0deg); }
-}
-
-.return-door-btn .mini-knob {
-  position: absolute;
-  right: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff6d5, #f0c27f 60%, #c9953c);
-  z-index: 10;
-  pointer-events: none;
-}
-
-.return-door-btn .return-label {
-  transition: opacity 0.4s ease-out, width 0.4s ease-out, margin 0.4s ease-out;
-  overflow: hidden;
-  white-space: nowrap;
-  display: inline-block;
-}
-
-/* Hover state */
-.return-door-btn:hover {
-  transform: translateX(-50%) scale(2.2);
-  bottom: 60px;
-  background: transparent;
-  backdrop-filter: none;
-  border: none;
-  padding: 0.6rem;
-  box-shadow: none;
-}
-
-.return-door-btn:hover .return-label {
-  opacity: 0;
-  width: 0;
-  margin: 0;
-}
-
-.return-door-btn:hover .mini-door {
-  box-shadow: 0 0 24px rgba(233, 69, 96, 1), 0 0 50px rgba(233, 69, 96, 0.7);
-  transform: scale(1.5);
-}
-
-/* On hover, spring bounce animation */
-.return-door-btn:hover .mini-door-panel {
-  animation: doorSpring 2.5s ease-in-out infinite;
-}
-
-.return-door-btn:active {
-  transform: translateX(-50%) scale(2.0);
-  bottom: 58px;
-}
-
-#streetview.active .return-door-btn {
-  display: flex;
-}
-
-/* ── Full-Screen Door Close Overlay ── */
-#doorCloseAnim {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: none;
-  pointer-events: none;
-}
-
-#doorCloseAnim.active {
-  display: block;
-  pointer-events: all;
-}
-
-.close-scene {
-  position: absolute;
-  inset: 0;
-  perspective: 1800px;
-  overflow: hidden;
-}
-
-/* Full-screen door frame border on all 4 edges */
-.close-door-frame {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  overflow: hidden;
-}
-
-.close-door-frame::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 12px solid rgba(220, 235, 255, 0.9);
-  pointer-events: none;
-  z-index: 3;
-  box-shadow:
-    0 0 15px rgba(220, 235, 255, 0.8),
-    0 0 40px rgba(200, 220, 255, 0.5),
-    inset 0 0 15px rgba(255, 255, 255, 0.3);
-  transition: border-color 0.8s ease, box-shadow 0.8s ease;
-}
-
-#doorCloseAnim.closing .close-door-frame::before {
-  border-color: var(--door-frame);
-  box-shadow:
-    0 0 60px var(--door-glow),
-    inset 0 0 30px rgba(233, 69, 96, 0.15);
-}
-
-/* The "portal" behind the door — shows through when door is open */
-.close-portal {
-  position: absolute;
-  inset: 12px;
-  background: transparent;
-  z-index: 0;
-}
-
-/* Crack of light on the right edge — narrows as door closes */
-.close-light-crack {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  bottom: 12px;
-  width: 100%;
-  background: linear-gradient(to left,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(230, 240, 255, 0.6) 15%,
-    rgba(200, 220, 255, 0.2) 40%,
-    transparent 70%);
-  z-index: 1;
-  opacity: 1;
-  transition: opacity 0.8s ease 0.6s;
-}
-
-#doorCloseAnim.closing .close-light-crack {
-  opacity: 0;
-}
-
-/* Full-screen door panel — swings closed from left edge */
-.close-panel {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  background: linear-gradient(160deg, var(--door-pink), #c2185b);
-  backface-visibility: hidden;
-  transform-origin: left center;
-  transform: rotateY(-90deg);
-  z-index: 2;
-  box-shadow: inset 0 0 60px rgba(0,0,0,0.25);
-  transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* inner panel lines */
-.close-panel::before {
-  content: '';
-  position: absolute;
-  inset: 24px;
-  border: 2px solid rgba(255,255,255,0.12);
-  pointer-events: none;
-}
-
-/* door handle */
-.close-panel::after {
-  content: '';
-  position: absolute;
-  right: 48px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff6d5, #f0c27f 40%, #c9953c 75%, #8b6914);
-  box-shadow: 0 0 12px rgba(240, 194, 127, 0.5), 0 2px 6px rgba(0,0,0,0.4);
-}
-
-#doorCloseAnim.closing .close-panel {
-  transform: rotateY(0deg);
-}
-
-/* fade-to-dark overlay after door fully closes */
-.close-fade {
-  position: absolute;
-  inset: 0;
-  background: var(--bg);
-  opacity: 0;
-  z-index: 5;
-  transition: opacity 0.5s ease;
-}
-
-#doorCloseAnim.closed .close-fade {
-  opacity: 1;
-}
-
-/* Phase 3: shrink from fullscreen to small door size, centered */
-#doorCloseAnim.shrinking {
-  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease 0.6s;
-  transform-origin: center center;
-  transform: scale(0.08);
-  border-radius: 20px;
-  opacity: 0;
-}
-
-/* Hide the dark frame/scene when shrinking — only keep the pink panel visible */
-#doorCloseAnim.shrinking .close-scene,
-#doorCloseAnim.shrinking .close-door-frame,
-#doorCloseAnim.shrinking .close-light-crack,
-#doorCloseAnim.shrinking .close-fade {
-  display: none;
-}
-
-#doorCloseAnim.shrinking .close-panel {
-  position: fixed;
-  inset: 0;
-  transform: rotateY(0deg);
-  border-radius: 20px;
-  background: linear-gradient(160deg, var(--door-pink), #c2185b);
-  z-index: 9999;
-  transition: none;
-}
-
-@media (max-width: 500px) {
-  .return-door-btn { bottom: 24px; font-size: 0.85rem; padding: 0.5rem 1.1rem; }
-}
-
-/* ── Shooting stars ── */
-.shooting-star {
-  position: fixed;
-  pointer-events: none;
-  z-index: 1;
-  width: var(--len, 80px);
-  height: 1.5px;
-  background: linear-gradient(90deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0.03) 25%,
-    rgba(255,255,255,0.1) 55%,
-    rgba(255,255,255,0.35) 80%,
-    rgba(255,255,255,0.7) 100%
-  );
-  clip-path: polygon(0% 50%, 100% 20%, 100% 80%);
-  opacity: 0;
-  animation: shootingStar var(--duration) linear forwards;
-}
-
-.shooting-star.bright {
-  height: 2px;
-  filter: drop-shadow(0 0 2px rgba(255,255,255,0.3));
-}
-
-@keyframes shootingStar {
-  0%   { opacity: 0;   transform: translate(0, 0) rotate(var(--rot)); }
-  8%   { opacity: var(--peak, 0.55); }
-  60%  { opacity: calc(var(--peak, 0.55) * 0.6); }
-  100% { opacity: 0;   transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
-}
-
 /* scrollbar — just in case */
 ::-webkit-scrollbar { width: 0; height: 0; }
 </style>
@@ -1234,8 +797,7 @@ body::before {
 
   <div class="search-row">
     <form id="searchForm">
-      <input type="text" id="placeInput" placeholder="Type a place to begin" autocomplete="off" autofocus inputmode="text" />
-      <div class="placeholder-marquee" id="placeholderMarquee" style="display:none !important; visibility:hidden"><span></span></div>
+      <input type="text" id="placeInput" placeholder="Where to go?" autocomplete="off" autofocus inputmode="text" />
 
       <button type="submit" class="open-btn" id="openBtn">Open</button>
     </form>
@@ -1270,33 +832,7 @@ body::before {
   </div>
 </div>
 
-<!-- ── Street View fullscreen ── -->
-<div id="streetview">
-  <button class="return-door-btn" id="returnDoor">
-    <span class="mini-door"><span class="mini-door-panel"><span class="mini-knob"></span></span></span> <span class="return-label">Return</span>
-  </button>
-  <div id="streetview-loading">
-    <div class="spinner"></div>
-    <span>Opening the door…</span>
-  </div>
-  <div id="streetview-pano"></div>
-</div>
-
-<!-- ── Door‑close animation ── -->
-<div id="doorCloseAnim">
-  <div class="close-scene">
-    <div class="close-door-frame">
-      <div class="close-portal"></div>
-      <div class="close-light-crack"></div>
-      <div class="close-panel"></div>
-    </div>
-  </div>
-  <div class="close-fade"></div>
-</div>
-
 <script>
-const GMAPS_API_KEY = 'AIzaSyD1Y6cgwKJBLTMP5729GYcbiPvZpZPR1Lo';
-
 const landing      = document.getElementById('landing');
 const searchForm   = document.getElementById('searchForm');
 const placeInput   = document.getElementById('placeInput');
@@ -1305,90 +841,11 @@ const doorHandle   = document.getElementById('doorHandle');
 const doorAnim     = document.getElementById('doorAnim');
 const hintText     = document.getElementById('hintText');
 const doorWrapper  = document.getElementById('doorClick');
-const streetview   = document.getElementById('streetview');
-const svLoading    = document.getElementById('streetview-loading');
-const svPano       = document.getElementById('streetview-pano');
-const marqueeEl    = document.getElementById('placeholderMarquee');
-const marqueeSpan  = marqueeEl.querySelector('span');
 
 let isOpening = false;
-let gmapsLoaded = false;
-let gmapsLoadPromise = null;
 let lastHasText = false;
 
-const PLACEHOLDERS = [
-  'Where your heart wants to go',
-  'The place you keep thinking about',
-  'Where would you run to?'
-];
-let currentPlaceholder = -1;
-
-function setMarqueeText(text) {
-  marqueeSpan.textContent = text;
-  marqueeSpan.classList.remove('scrolling');
-  // Calculate how far to scroll based on overflow
-  const containerW = marqueeEl.offsetWidth;
-  const textW = marqueeSpan.scrollWidth;
-  if (textW > containerW) {
-    const offset = -(textW - containerW);
-    marqueeSpan.style.setProperty('--marquee-offset', offset + 'px');
-  } else {
-    marqueeSpan.style.setProperty('--marquee-offset', '0px');
-  }
-}
-
-function showMarquee(show) {
-  // marquee disabled — using native placeholder instead
-  marqueeEl.style.display = 'none';
-}
-
-function pickPlaceholder() {
-  let next;
-  do { next = Math.floor(Math.random() * PLACEHOLDERS.length); }
-  while (next === currentPlaceholder && PLACEHOLDERS.length > 1);
-  currentPlaceholder = next;
-  setMarqueeText(PLACEHOLDERS[next]);
-}
-
-// Set initial placeholder
-currentPlaceholder = Math.floor(Math.random() * PLACEHOLDERS.length);
-setMarqueeText(PLACEHOLDERS[currentPlaceholder]);
-
-// Hide marquee on focus, show on blur if empty
-placeInput.addEventListener('focus', () => showMarquee(false));
-placeInput.addEventListener('blur', () => {
-  if (!placeInput.value.trim()) showMarquee(true);
-});
-
-// Hover over input area: start marquee scroll; leave: stop/reset
-searchForm.addEventListener('mouseenter', () => {
-  if (marqueeEl.style.display !== 'none') {
-    marqueeSpan.classList.add('scrolling');
-  }
-});
-searchForm.addEventListener('mouseleave', () => {
-  if (document.activeElement !== placeInput) {
-    marqueeSpan.classList.remove('scrolling');
-  }
-});
-
-const HINT_PHRASES = [
-  'Where your heart wants to go',
-  'The place you keep thinking about',
-  'Where would you run to?'
-];
-let currentHintIndex = Math.floor(Math.random() * HINT_PHRASES.length);
-hintText.textContent = HINT_PHRASES[currentHintIndex];
-
-function pickHint() {
-  let next;
-  do { next = Math.floor(Math.random() * HINT_PHRASES.length); }
-  while (next === currentHintIndex && HINT_PHRASES.length > 1);
-  currentHintIndex = next;
-  hintText.textContent = HINT_PHRASES[currentHintIndex];
-}
-
-const HINT_DEFAULT = null; // now handled by pickHint()
+const HINT_DEFAULT = 'Type a place to begin';
 const HINT_ACTIVE  = 'Press Enter or click Open';
 
 // Show/hide Open button, light leak, and hint text based on input content
@@ -1397,12 +854,9 @@ function handleInputChange() {
   if (hasText) {
     openBtn.classList.add('visible');
     doorWrapper.classList.add('has-text');
-    showMarquee(false);
   } else {
     openBtn.classList.remove('visible');
     doorWrapper.classList.remove('has-text');
-    if (lastHasText) pickPlaceholder();
-    if (document.activeElement !== placeInput) showMarquee(true);
   }
 
   // Fade-swap hint text when state changes
@@ -1410,7 +864,7 @@ function handleInputChange() {
     lastHasText = hasText;
     hintText.classList.add('fading');
     setTimeout(() => {
-      if (hasText) { hintText.textContent = HINT_ACTIVE; } else { pickHint(); }
+      hintText.textContent = hasText ? HINT_ACTIVE : HINT_DEFAULT;
       hintText.classList.remove('fading');
     }, 300);
   }
@@ -1563,14 +1017,16 @@ doorWrapper.addEventListener('click', () => { triggerSearch(); });
 // ── Easter egg detection ──
 function detectEasterEgg(place) {
   const lower = place.toLowerCase();
-  if (lower.includes('tokyo') || lower.includes('とうきょう')) return 'tokyo';
+  if (lower.includes('tokyo') || lower.includes('东京') || lower.includes('とうきょう')) return 'tokyo';
   if (lower.includes('arctic') || lower.includes('北极') || lower.includes('north pole')) return 'arctic';
   // Hearts locations
   const heartKeywords = [
     '红木城', 'redwood city',
     '半月湾', 'half moon bay',
     '巨杉国家公园', 'sequoia national park', 'sequoia',
-    '北京', 'beijing',
+    '夏威夷', 'hawaii',
+    '夏威夷火山国家公园', 'hawaii volcanoes', 'volcanoes national park',
+    '夏威夷大岛', 'big island', '北京', 'beijing',
   ];
   if (heartKeywords.some(kw => lower.includes(kw))) return 'hearts';
   return null;
@@ -1682,375 +1138,6 @@ async function handleTurnThenOpen(place) {
   openDoor(place);
 }
 
-// ── Google Maps API loader ──
-function loadGoogleMapsAPI() {
-  if (gmapsLoaded) return Promise.resolve();
-  if (gmapsLoadPromise) return gmapsLoadPromise;
-  gmapsLoadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_API_KEY}`;
-    script.async = true;
-    script.onload = () => { gmapsLoaded = true; resolve(); };
-    script.onerror = () => reject(new Error('Failed to load Google Maps API'));
-    document.head.appendChild(script);
-  });
-  return gmapsLoadPromise;
-}
-
-// ── Geocode place name to coordinates ──
-async function geocodePlace(place) {
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(place)}&key=${GMAPS_API_KEY}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data.status === 'OK' && data.results.length > 0) {
-    return data.results[0].geometry.location; // { lat, lng }
-  }
-  return null;
-}
-
-// ── Show Street View panorama ──
-// ── Curated Street View spots (keyword → pano + POV) ──
-const CURATED_SPOTS = [
-  {
-    keywords: ['法国', 'france', '巴黎', 'paris', '埃菲尔', 'eiffel'],
-    pano: 'f-ouK7bxmBzLT9S9-tKCQw',
-    pov: { heading: 156.83, pitch: -3.75 }
-  },
-  {
-    keywords: ['格陵兰', '格陵兰岛', 'greenland'],
-    pano: '5DtG7cXPa33qY8Jyyb3MmQ',
-    pov: { heading: 52.75, pitch: 2.7 }
-  },
-  {
-    keywords: ['京都', 'kyoto', '御室桜', '御室'],
-    pano: 'CIHM0ogKEICAgIC2sMze8AE',
-    coords: { lat: 35.02984, lng: 135.7133617 },
-    pov: { heading: 74.17, pitch: 10.4 }
-  },
-  {
-    keywords: ['火山', '火山国家公园', '夏威夷火山', 'hawaii volcanoes', 'volcanoes national park', 'big island', '夏威夷大岛', '夏威夷'],
-    pano: 'tWUvK3e5vLs6Nucds8Jhiw',
-    pov: { heading: 216.61, pitch: 14.31 }
-  },
-  {
-    keywords: ['东京', 'tokyo', '东京铁塔', 'tokyo tower'],
-    pano: 'nemDI0045pfUe00lVdetqg',
-    pov: { heading: 302.06, pitch: -40.77 }
-  },
-  {
-    keywords: ['旧金山', '旧金山市', 'san francisco', 'sf'],
-    pano: 'DUN-g0r8RinmPUCGQ5YxEw',
-    pov: { heading: 346.06, pitch: 1.62 }
-  },
-  {
-    keywords: ['日本', 'japan', '河津', 'kawazu', '伊豆', 'izu'],
-    pano: 'CIHM0ogKEICAgIDhpK_ZpAE',
-    coords: { lat: 34.7445733, lng: 138.9958094 },
-    pov: { heading: 9.05, pitch: 5.46 }
-  },
-];
-
-function getCuratedSpot(place) {
-  const lower = place.toLowerCase();
-  return CURATED_SPOTS.find(s => s.keywords.some(kw => lower.includes(kw))) || null;
-}
-
-async function showStreetView(place) {
-  svLoading.style.display = 'flex';
-  svPano.innerHTML = '';
-  streetview.classList.add('active');
-
-  try {
-    await loadGoogleMapsAPI();
-
-    // Check curated spots first
-    const curated = getCuratedSpot(place);
-    if (curated) {
-      if (curated.pano) {
-        // Try pano ID first; if it fails, fall through to coords
-        svLoading.style.display = 'none';
-        currentPanorama = new google.maps.StreetViewPanorama(svPano, {
-          pano: curated.pano,
-          pov: { ...curated.pov, zoom: 1 },
-          linksControl: true,
-          panControl: true,
-          enableCloseButton: false,
-          fullscreenControl: false,
-        });
-        // Listen for pano_changed — if pano still empty after 3s, fallback to coords
-        if (curated.coords) {
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          const panoStatus = currentPanorama.getStatus ? currentPanorama.getStatus() : null;
-          if (!svPano.querySelector('canvas') && !svPano.querySelector('img')) {
-            // Pano failed, destroy and try coords
-            destroyPanorama();
-            svPano.innerHTML = '';
-            svLoading.style.display = 'flex';
-            // fall through to coords below
-          } else {
-            return;
-          }
-        } else {
-          return;
-        }
-      }
-      if (curated.coords) {
-        // Coords-based: find nearest official Street View
-        const location = new google.maps.LatLng(curated.coords.lat, curated.coords.lng);
-        const svService = new google.maps.StreetViewService();
-        const radii = [500, 2000, 10000];
-        let found = false;
-        for (const radius of radii) {
-          await new Promise(resolve => {
-            svService.getPanorama({ location, radius, source: google.maps.StreetViewSource.OUTDOOR }, (data, status) => {
-              if (status === google.maps.StreetViewStatus.OK && !found) {
-                found = true;
-                svLoading.style.display = 'none';
-                currentPanorama = new google.maps.StreetViewPanorama(svPano, {
-                  position: data.location.latLng,
-                  pov: { ...curated.pov, zoom: 1 },
-                  linksControl: true,
-                  panControl: true,
-                  enableCloseButton: false,
-                  fullscreenControl: false,
-                });
-              }
-              resolve();
-            });
-          });
-          if (found) break;
-        }
-        if (!found) showSVFallback(place, 'No street view available here');
-      }
-      return;
-    }
-
-    // Fall through to geocode
-    const coords = await geocodePlace(place);
-
-    if (!coords) {
-      showSVFallback(place, 'Could not find this location');
-      return;
-    }
-
-    const location = new google.maps.LatLng(coords.lat, coords.lng);
-    const svService = new google.maps.StreetViewService();
-
-    // Try progressively larger radii to find nearest Street View
-    const radii = [200, 1000, 5000, 20000, 50000];
-    let found = false;
-
-    for (const radius of radii) {
-      await new Promise(resolve => {
-        svService.getPanorama({ location, radius, source: google.maps.StreetViewSource.OUTDOOR }, (data, status) => {
-          if (status === google.maps.StreetViewStatus.OK && !found) {
-            found = true;
-            svLoading.style.display = 'none';
-            currentPanorama = new google.maps.StreetViewPanorama(svPano, {
-              position: data.location.latLng,
-              pov: { heading: 0, pitch: 0 },
-              zoom: 1,
-              linksControl: true,
-              panControl: true,
-              enableCloseButton: false,
-              fullscreenControl: false,
-            });
-          }
-          resolve();
-        });
-      });
-      if (found) break;
-    }
-
-    if (!found) {
-      showSVFallback(place, 'No street view available here');
-    }
-  } catch (err) {
-    showSVFallback(place, 'Failed to load Street View');
-  }
-}
-
-function showSVFallback(place, message) {
-  const encoded = encodeURIComponent(place);
-  svLoading.innerHTML = `
-    <div class="sv-fallback">
-      <p>${message}</p>
-      <a href="https://www.google.com/maps/search/${encoded}/@0,0,12z/data=!3m1!4b1" target="_blank">Open in Google Maps</a>
-    </div>`;
-}
-
-let currentPanorama = null;
-const returnDoor     = document.getElementById('returnDoor');
-const doorCloseAnim  = document.getElementById('doorCloseAnim');
-
-// ── Door close sound (reverse creak) ──
-function playDoorCloseSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-
-    // Reverb
-    function makeReverb(duration, decay) {
-      const len = ctx.sampleRate * duration;
-      const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-      for (let ch = 0; ch < 2; ch++) {
-        const d = buf.getChannelData(ch);
-        for (let i = 0; i < len; i++) {
-          d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
-        }
-      }
-      return buf;
-    }
-
-    const convolver = ctx.createConvolver();
-    convolver.buffer = makeReverb(1.2, 3.5);
-    const reverbGain = ctx.createGain();
-    reverbGain.gain.value = 0.15;
-    convolver.connect(reverbGain).connect(ctx.destination);
-
-    // Reverse creak — sweeps downward
-    const creakDur = 0.8;
-    const creakOsc = ctx.createOscillator();
-    creakOsc.type = 'sawtooth';
-    creakOsc.frequency.setValueAtTime(500, now);
-    creakOsc.frequency.exponentialRampToValueAtTime(140, now + creakDur);
-    const creakOsc2 = ctx.createOscillator();
-    creakOsc2.type = 'triangle';
-    creakOsc2.frequency.setValueAtTime(320, now);
-    creakOsc2.frequency.exponentialRampToValueAtTime(90, now + creakDur);
-    const creakEnv = ctx.createGain();
-    creakEnv.gain.setValueAtTime(0, now);
-    creakEnv.gain.linearRampToValueAtTime(0.06, now + 0.1);
-    creakEnv.gain.setValueAtTime(0.06, now + creakDur * 0.4);
-    creakEnv.gain.linearRampToValueAtTime(0, now + creakDur);
-    const creakFilter = ctx.createBiquadFilter();
-    creakFilter.type = 'bandpass';
-    creakFilter.frequency.setValueAtTime(500, now);
-    creakFilter.frequency.exponentialRampToValueAtTime(180, now + creakDur);
-    creakFilter.Q.value = 2;
-    creakOsc.connect(creakFilter);
-    creakOsc2.connect(creakFilter);
-    creakFilter.connect(creakEnv);
-    creakEnv.connect(ctx.destination);
-    creakEnv.connect(convolver);
-    creakOsc.start(now);
-    creakOsc2.start(now);
-    creakOsc.stop(now + creakDur);
-    creakOsc2.stop(now + creakDur);
-
-    // Latch click at the end
-    const clickTime = now + creakDur - 0.05;
-    const clickOsc = ctx.createOscillator();
-    clickOsc.type = 'sine';
-    clickOsc.frequency.setValueAtTime(220, clickTime);
-    clickOsc.frequency.exponentialRampToValueAtTime(120, clickTime + 0.06);
-    const clickEnv = ctx.createGain();
-    clickEnv.gain.setValueAtTime(0, clickTime);
-    clickEnv.gain.linearRampToValueAtTime(0.25, clickTime + 0.003);
-    clickEnv.gain.exponentialRampToValueAtTime(0.001, clickTime + 0.06);
-    clickOsc.connect(clickEnv);
-    clickEnv.connect(ctx.destination);
-    clickEnv.connect(convolver);
-    clickOsc.start(clickTime);
-    clickOsc.stop(clickTime + 0.06);
-  } catch (e) { /* audio not available */ }
-}
-
-// ── Destroy panorama to avoid memory leaks ──
-function destroyPanorama() {
-  if (currentPanorama) {
-    google.maps.event.clearInstanceListeners(currentPanorama);
-    currentPanorama = null;
-  }
-  svPano.innerHTML = '';
-}
-
-// ── Leave street view (shared logic) ──
-function leaveStreetView() {
-  destroyPanorama();
-  streetview.classList.remove('active');
-  svLoading.style.display = 'flex';
-  svLoading.innerHTML = '<div class="spinner"></div><span>Opening the door…</span>';
-  resetLanding();
-}
-
-// ── Return door button — animated close ──
-returnDoor.addEventListener('click', async () => {
-  returnDoor.style.display = 'none'; // hide immediately, no door-in-door
-  playDoorCloseSound();
-
-  // Show close animation overlay on top of street view
-  doorCloseAnim.classList.add('active');
-  doorCloseAnim.classList.remove('closing', 'closed', 'shrinking');
-  doorCloseAnim.style.transform = '';
-  doorCloseAnim.style.opacity = '';
-  void doorCloseAnim.offsetHeight;
-
-  // Start door swing closed
-  await wait(50);
-  doorCloseAnim.classList.add('closing');
-
-  // Wait for door to swing shut
-  await wait(1000);
-
-  // Fade to dark briefly
-  doorCloseAnim.classList.add('closed');
-  await wait(400);
-
-  // Prepare landing page behind the close overlay (invisible)
-  destroyPanorama();
-  streetview.classList.remove('active');
-  svLoading.style.display = 'flex';
-  svLoading.innerHTML = '<div class="spinner"></div><span>Opening the door…</span>';
-
-  // Reset landing state while hidden behind overlay
-  doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
-  placeInput.value = '';
-  pickPlaceholder();
-  showMarquee(true);
-  openBtn.classList.remove('visible');
-  doorWrapper.classList.remove('has-text');
-  pickHint();
-  lastHasText = false;
-  isOpening = false;
-
-  // Show landing at opacity 0, positioned and ready
-  landing.classList.remove('hidden');
-  landing.classList.add('returning');
-  void landing.offsetHeight;
-
-  // Shrink the close overlay from fullscreen to small door size
-  doorCloseAnim.classList.add('shrinking');
-
-  // Simultaneously fade in the landing page
-  landing.classList.add('fade-in');
-
-  // Wait for shrink + crossfade to finish
-  await wait(900);
-
-  // Clean up
-  doorCloseAnim.classList.remove('active', 'closing', 'closed', 'shrinking');
-  doorCloseAnim.style.transform = '';
-  doorCloseAnim.style.opacity = '';
-  landing.classList.remove('returning', 'fade-in');
-  returnDoor.style.display = ''; // restore for next street view visit
-  placeInput.focus();
-});
-
-function resetLanding() {
-  doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
-  landing.classList.remove('hidden');
-  placeInput.value = '';
-  pickPlaceholder();
-  showMarquee(true);
-  openBtn.classList.remove('visible');
-  doorWrapper.classList.remove('has-text');
-  pickHint();
-  lastHasText = false;
-  placeInput.focus();
-  isOpening = false;
-}
-
 async function openDoor(place) {
   landing.classList.add('hidden');
 
@@ -2076,9 +1163,35 @@ async function openDoor(place) {
   // Let the step-through light expand to fill the screen
   await wait(600);
 
-  // Hide door animation, show Street View
+  // Special street view links for specific locations
+  const specialLinks = {
+    '富士山': 'https://www.google.com/maps/place/Nagasaki+Park/@35.5215516,138.7573478,3a,75y,2.68h,88.21t/data=!3m8!1e1!3m6!1sCIHM0ogKEICAgIDh8aD2UA!2e10!3e11!6shttps:%2F%2Flh3.googleusercontent.com%2Fgpms-cs-s%2FAFfmt2Z6ffARtZqWWXazX3BKelbIK1cadrYlnX7X2l86WZGpoFT5VIgk-_R-YpP_JCl2qg1IhsJBoeHOmsN-iO7Ni7xlQirON3SsMW3g9CmDXl8xz_T0wH9-K5RL6yzPoNxfLGygWq9L%3Dw900-h600-k-no-pi1.788609877114638-ya2.6835976082412776-ro0-fo100!7i11968!8i5984!4m14!1m7!3m6!1s0x60195fb4a5043f4f:0x29cbb24b1e337d47!2z5rKz5Y-j5rmW!8m2!3d35.5170946!4d138.7517787!16zL20vMDZ0MXYw!3m5!1s0x60195f692ee10103:0x9a321460899ae0a8!8m2!3d35.5215516!4d138.7573478!16s%2Fg%2F11fmpclw0s?entry=ttu&g_ep=EgoyMDI2MDMyOS4wIKXMDSoASAFQAw%3D%3D',
+    'fuji': 'https://www.google.com/maps/place/Nagasaki+Park/@35.5215516,138.7573478,3a,75y,2.68h,88.21t/data=!3m8!1e1!3m6!1sCIHM0ogKEICAgIDh8aD2UA!2e10!3e11!6shttps:%2F%2Flh3.googleusercontent.com%2Fgpms-cs-s%2FAFfmt2Z6ffARtZqWWXazX3BKelbIK1cadrYlnX7X2l86WZGpoFT5VIgk-_R-YpP_JCl2qg1IhsJBoeHOmsN-iO7Ni7xlQirON3SsMW3g9CmDXl8xz_T0wH9-K5RL6yzPoNxfLGygWq9L%3Dw900-h600-k-no-pi1.788609877114638-ya2.6835976082412776-ro0-fo100!7i11968!8i5984!4m14!1m7!3m6!1s0x60195fb4a5043f4f:0x29cbb24b1e337d47!2z5rKz5Y-j5rmW!8m2!3d35.5170946!4d138.7517787!16zL20vMDZ0MXYw!3m5!1s0x60195f692ee10103:0x9a321460899ae0a8!8m2!3d35.5215516!4d138.7573478!16s%2Fg%2F11fmpclw0s?entry=ttu&g_ep=EgoyMDI2MDMyOS4wIKXMDSoASAFQAw%3D%3D',
+    'mount fuji': 'https://www.google.com/maps/place/Nagasaki+Park/@35.5215516,138.7573478,3a,75y,2.68h,88.21t/data=!3m8!1e1!3m6!1sCIHM0ogKEICAgIDh8aD2UA!2e10!3e11!6shttps:%2F%2Flh3.googleusercontent.com%2Fgpms-cs-s%2FAFfmt2Z6ffARtZqWWXazX3BKelbIK1cadrYlnX7X2l86WZGpoFT5VIgk-_R-YpP_JCl2qg1IhsJBoeHOmsN-iO7Ni7xlQirON3SsMW3g9CmDXl8xz_T0wH9-K5RL6yzPoNxfLGygWq9L%3Dw900-h600-k-no-pi1.788609877114638-ya2.6835976082412776-ro0-fo100!7i11968!8i5984!4m14!1m7!3m6!1s0x60195fb4a5043f4f:0x29cbb24b1e337d47!2z5rKz5Y-j5rmW!8m2!3d35.5170946!4d138.7517787!16zL20vMDZ0MXYw!3m5!1s0x60195f692ee10103:0x9a321460899ae0a8!8m2!3d35.5215516!4d138.7573478!16s%2Fg%2F11fmpclw0s?entry=ttu&g_ep=EgoyMDI2MDMyOS4wIKXMDSoASAFQAw%3D%3D',
+    '富士': 'https://www.google.com/maps/place/Nagasaki+Park/@35.5215516,138.7573478,3a,75y,2.68h,88.21t/data=!3m8!1e1!3m6!1sCIHM0ogKEICAgIDh8aD2UA!2e10!3e11!6shttps:%2F%2Flh3.googleusercontent.com%2Fgpms-cs-s%2FAFfmt2Z6ffARtZqWWXazX3BKelbIK1cadrYlnX7X2l86WZGpoFT5VIgk-_R-YpP_JCl2qg1IhsJBoeHOmsN-iO7Ni7xlQirON3SsMW3g9CmDXl8xz_T0wH9-K5RL6yzPoNxfLGygWq9L%3Dw900-h600-k-no-pi1.788609877114638-ya2.6835976082412776-ro0-fo100!7i11968!8i5984!4m14!1m7!3m6!1s0x60195fb4a5043f4f:0x29cbb24b1e337d47!2z5rKz5Y-j5rmW!8m2!3d35.5170946!4d138.7517787!16zL20vMDZ0MXYw!3m5!1s0x60195f692ee10103:0x9a321460899ae0a8!8m2!3d35.5215516!4d138.7573478!16s%2Fg%2F11fmpclw0s?entry=ttu&g_ep=EgoyMDI2MDMyOS4wIKXMDSoASAFQAw%3D%3D',
+  };
+
+  const lowerPlace = place.toLowerCase().trim();
+  const specialUrl = Object.entries(specialLinks).find(([k]) => lowerPlace.includes(k))?.[1];
+
+  if (specialUrl) {
+    window.open(specialUrl, '_blank');
+  } else {
+    const encoded = encodeURIComponent(place);
+    window.open(`https://www.google.com/maps/search/${encoded}/@0,0,12z/data=!3m1!4b1`, '_blank');
+  }
+
+  // Reset for next use
+  await wait(300);
   doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
-  showStreetView(place);
+  landing.classList.remove('hidden');
+  placeInput.value = '';
+  openBtn.classList.remove('visible');
+  doorWrapper.classList.remove('has-text');
+  hintText.textContent = HINT_DEFAULT;
+  lastHasText = false;
+  placeInput.focus();
+  isOpening = false;
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -2107,123 +1220,6 @@ function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
       setKeyboardState(ratio < THRESHOLD);
     });
   }
-})();
-
-// ── Shooting stars (landing page only) ──
-(function() {
-  let timer = null;
-
-  function spawnStar(opts) {
-    if (landing.classList.contains('hidden')) return;
-
-    const star = document.createElement('div');
-    star.className = 'shooting-star';
-
-    // 1 in 5 chance of a brighter star
-    const bright = opts ? opts.bright : Math.random() < 0.2;
-    if (bright) star.classList.add('bright');
-
-    // Randomize tail length and peak opacity
-    const tailLen = 200 + Math.random() * 150; // 200-350px
-    const peak = opts ? opts.peak : (0.5 + Math.random() * 0.2);  // 0.5-0.7
-    star.style.setProperty('--len', tailLen + 'px');
-    star.style.setProperty('--peak', peak);
-
-    // Start in upper-right quadrant
-    const startX = opts ? opts.startX : (50 + Math.random() * 45); // 50-95% from left
-    const startY = opts ? opts.startY : (Math.random() * 35);       // 0-35% from top
-
-    // Angle 210-240 degrees (down-left)
-    const angle = opts ? opts.angle : ((210 + Math.random() * 30) * Math.PI / 180);
-    const dist = 200 + Math.random() * 150;
-    const dx = Math.cos(angle) * dist;
-    const dy = -Math.sin(angle) * dist; // CSS Y is inverted
-
-    const duration = 0.8 + Math.random() * 0.4; // 0.8-1.2s
-
-    star.style.left = startX + 'vw';
-    star.style.top = startY + 'vh';
-    star.style.setProperty('--dx', dx + 'px');
-    star.style.setProperty('--dy', dy + 'px');
-    star.style.setProperty('--duration', duration + 's');
-    // Rotate so the bright head (right end) points in movement direction
-    const rotDeg = Math.atan2(-dy, dx) * 180 / Math.PI;
-    star.style.setProperty('--rot', (-rotDeg) + 'deg');
-
-    document.body.appendChild(star);
-
-    // Clean up after animation
-    star.addEventListener('animationend', () => star.remove());
-    // Fallback cleanup
-    setTimeout(() => { if (star.parentNode) star.remove(); }, (duration + 0.5) * 1000);
-
-    return { startX, startY, angle, bright, peak };
-  }
-
-  function spawnGroup() {
-    const roll = Math.random();
-    const info = spawnStar();
-    if (!info) return;
-
-    if (roll < 0.65) {
-      // 65%: single star — already spawned
-    } else if (roll < 0.90) {
-      // 25%: 2-star pair, staggered
-      const delay = 100 + Math.random() * 150; // 100-250ms
-      const offX = (Math.random() - 0.5) * 6;  // ±3vw
-      const offY = (Math.random() - 0.5) * 4;  // ±2vh
-      setTimeout(() => spawnStar({
-        startX: info.startX + offX,
-        startY: info.startY + offY,
-        angle: info.angle + (Math.random() - 0.5) * 0.08,
-        bright: Math.random() < 0.2,
-        peak: info.peak * (0.5 + Math.random() * 0.3)
-      }), delay);
-    } else {
-      // 10%: 3-star mini shower, spread across upper screen
-      for (let i = 1; i <= 2; i++) {
-        const delay = i * (80 + Math.random() * 120); // 80-200ms each
-        setTimeout(() => spawnStar({
-          startX: 50 + Math.random() * 45,
-          startY: Math.random() * 35,
-          angle: info.angle + (Math.random() - 0.5) * 0.15,
-          bright: Math.random() < 0.2,
-          peak: 0.4 + Math.random() * 0.25
-        }), delay);
-      }
-    }
-  }
-
-  function scheduleNext() {
-    // Irregular timing: 65% short gaps (3-5s), 35% long pauses (8-14s)
-    const delay = Math.random() < 0.65
-      ? 3000 + Math.random() * 2000   // 3-5s
-      : 8000 + Math.random() * 6000;  // 8-14s
-    timer = setTimeout(() => {
-      spawnGroup();
-      scheduleNext();
-    }, delay);
-  }
-
-  function startStars() {
-    if (timer) return;
-    scheduleNext();
-  }
-
-  function stopStars() {
-    clearTimeout(timer);
-    timer = null;
-  }
-
-  // Watch landing visibility
-  const obs = new MutationObserver(() => {
-    if (landing.classList.contains('hidden')) stopStars();
-    else startStars();
-  });
-  obs.observe(landing, { attributes: true, attributeFilter: ['class'] });
-
-  // Start immediately
-  startStars();
 })();
 </script>
 </body>
