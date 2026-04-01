@@ -773,6 +773,281 @@ body::before {
   transition: transform 0.3s ease;
 }
 
+/* ══════════════════════════════════════
+   STREET VIEW FULLSCREEN
+   ══════════════════════════════════════ */
+#streetview {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  background: #000;
+}
+
+#streetview.active {
+  display: block;
+}
+
+#streetview-pano {
+  width: 100%;
+  height: 100%;
+}
+
+#streetview-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  color: var(--text);
+  font-size: 1.1rem;
+  z-index: 201;
+  background: #000;
+}
+
+#streetview-loading .spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.sv-back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 210;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s;
+}
+
+.sv-back-btn:hover {
+  background: rgba(0,0,0,0.85);
+}
+
+.sv-fallback {
+  text-align: center;
+}
+
+.sv-fallback a {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.6rem 1.6rem;
+  border-radius: 30px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.sv-fallback a:hover {
+  opacity: 0.85;
+}
+
+/* ── Return Door Button (on Street View) ── */
+.return-door-btn {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 220;
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 50px;
+  background: rgba(20, 20, 35, 0.75);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 20px rgba(233, 69, 96, 0.3),
+    0 2px 12px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.return-door-btn .mini-door {
+  display: inline-block;
+  width: 16px;
+  height: 22px;
+  background: linear-gradient(160deg, var(--door-pink), #e91e63);
+  border-radius: 4px 4px 1px 1px;
+  position: relative;
+  box-shadow: 0 0 6px rgba(233, 69, 96, 0.5);
+}
+
+.return-door-btn .mini-door::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6d5, #f0c27f 60%, #c9953c);
+}
+
+.return-door-btn:hover {
+  background: rgba(30, 30, 50, 0.9);
+  box-shadow:
+    0 0 30px rgba(233, 69, 96, 0.45),
+    0 2px 16px rgba(0, 0, 0, 0.5);
+}
+
+.return-door-btn:active {
+  transform: translateX(-50%) scale(0.96);
+}
+
+#streetview.active .return-door-btn {
+  display: flex;
+}
+
+/* ── Door Close Overlay ── */
+#doorCloseAnim {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: none;
+  background: transparent;
+  pointer-events: none;
+}
+
+#doorCloseAnim.active {
+  display: block;
+  pointer-events: all;
+}
+
+.close-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+.close-door-frame {
+  width: 280px;
+  height: 420px;
+  position: relative;
+  transform-style: preserve-3d;
+  overflow: visible;
+}
+
+.close-door-frame::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border: 10px solid rgba(220, 235, 255, 0.9);
+  border-radius: 22px 22px 8px 8px;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow:
+    0 0 15px rgba(220, 235, 255, 0.8),
+    0 0 40px rgba(200, 220, 255, 0.5);
+  transition: border-color 0.8s ease, box-shadow 0.8s ease;
+}
+
+#doorCloseAnim.closing .close-door-frame::before {
+  border-color: var(--door-frame);
+  box-shadow: 0 0 60px var(--door-glow);
+}
+
+.close-portal {
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px 14px 4px 4px;
+  background: #fff;
+  z-index: 0;
+  opacity: 1;
+  transition: opacity 0.8s ease 0.6s;
+}
+
+#doorCloseAnim.closing .close-portal {
+  opacity: 0;
+}
+
+.close-panel {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, var(--door-pink), #c2185b);
+  backface-visibility: hidden;
+  border-radius: 14px 14px 4px 4px;
+  transform-origin: left center;
+  transform: rotateY(-100deg);
+  z-index: 2;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.25);
+  transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.close-panel::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 10px 10px 2px 2px;
+}
+
+.close-panel::after {
+  content: '';
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6d5, #f0c27f 40%, #c9953c 75%, #8b6914);
+  box-shadow: 0 0 8px rgba(240, 194, 127, 0.5), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+#doorCloseAnim.closing .close-panel {
+  transform: rotateY(0deg);
+}
+
+/* fade-in overlay that covers the screen after door closes */
+.close-fade {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  opacity: 0;
+  z-index: 5;
+  transition: opacity 0.4s ease;
+}
+
+#doorCloseAnim.closed .close-fade {
+  opacity: 1;
+}
+
+@media (max-width: 500px) {
+  .close-door-frame { width: 200px; height: 300px; }
+  .return-door-btn { bottom: 24px; font-size: 0.85rem; padding: 0.5rem 1.1rem; }
+}
+
 /* scrollbar — just in case */
 ::-webkit-scrollbar { width: 0; height: 0; }
 </style>
@@ -805,27 +1080,6 @@ body::before {
   </div>
 </div>
 
-<!-- ── Street View fullscreen ── -->
-<div id="streetviewScreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#000;">
-  <div id="streetviewMap" style="width:100%; height:100%;"></div>
-  <button id="backBtn" onclick="closeStreetView()" style="
-    position:absolute; top:20px; left:20px; z-index:10000;
-    background:rgba(0,0,0,0.65); color:#fff; border:1.5px solid rgba(255,255,255,0.3);
-    border-radius:24px; padding:10px 22px; font-size:15px; cursor:pointer;
-    font-family:inherit; backdrop-filter:blur(8px); letter-spacing:0.03em;
-    transition: background 0.2s;
-  " onmouseover="this.style.background='rgba(0,0,0,0.85)'" onmouseout="this.style.background='rgba(0,0,0,0.65)'">
-    ← 回到任意门
-  </button>
-  <div id="svPlaceName" style="
-    position:absolute; top:20px; left:50%; transform:translateX(-50%);
-    background:rgba(0,0,0,0.55); color:#fff; border-radius:20px;
-    padding:8px 20px; font-size:14px; letter-spacing:0.05em;
-    font-family:inherit; backdrop-filter:blur(8px); pointer-events:none;
-    border:1px solid rgba(255,255,255,0.2);
-  "></div>
-</div>
-
 <!-- ── Door‑open animation ── -->
 <div id="doorAnim">
   <div class="anim-scene">
@@ -853,7 +1107,33 @@ body::before {
   </div>
 </div>
 
+<!-- ── Street View fullscreen ── -->
+<div id="streetview">
+  <button class="sv-back-btn" id="svBack">← Back</button>
+  <button class="return-door-btn" id="returnDoor">
+    <span class="mini-door"></span> Return
+  </button>
+  <div id="streetview-loading">
+    <div class="spinner"></div>
+    <span>Opening the door…</span>
+  </div>
+  <div id="streetview-pano"></div>
+</div>
+
+<!-- ── Door‑close animation ── -->
+<div id="doorCloseAnim">
+  <div class="close-scene">
+    <div class="close-door-frame">
+      <div class="close-portal"></div>
+      <div class="close-panel"></div>
+    </div>
+  </div>
+  <div class="close-fade"></div>
+</div>
+
 <script>
+const GMAPS_API_KEY = 'AIzaSyD1Y6cgwKJBLTMP5729GYcbiPvZpZPR1Lo';
+
 const landing      = document.getElementById('landing');
 const searchForm   = document.getElementById('searchForm');
 const placeInput   = document.getElementById('placeInput');
@@ -862,8 +1142,14 @@ const doorHandle   = document.getElementById('doorHandle');
 const doorAnim     = document.getElementById('doorAnim');
 const hintText     = document.getElementById('hintText');
 const doorWrapper  = document.getElementById('doorClick');
+const streetview   = document.getElementById('streetview');
+const svBack       = document.getElementById('svBack');
+const svLoading    = document.getElementById('streetview-loading');
+const svPano       = document.getElementById('streetview-pano');
 
 let isOpening = false;
+let gmapsLoaded = false;
+let gmapsLoadPromise = null;
 let lastHasText = false;
 
 const HINT_DEFAULT = 'Type a place to begin';
@@ -1159,6 +1445,249 @@ async function handleTurnThenOpen(place) {
   openDoor(place);
 }
 
+// ── Google Maps API loader ──
+function loadGoogleMapsAPI() {
+  if (gmapsLoaded) return Promise.resolve();
+  if (gmapsLoadPromise) return gmapsLoadPromise;
+  gmapsLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_API_KEY}`;
+    script.async = true;
+    script.onload = () => { gmapsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error('Failed to load Google Maps API'));
+    document.head.appendChild(script);
+  });
+  return gmapsLoadPromise;
+}
+
+// ── Geocode place name to coordinates ──
+async function geocodePlace(place) {
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(place)}&key=${GMAPS_API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status === 'OK' && data.results.length > 0) {
+    return data.results[0].geometry.location; // { lat, lng }
+  }
+  return null;
+}
+
+// ── Pinned locations with hand-picked street view coordinates ──
+const PINNED_STREET_VIEW = [
+  {
+    keywords: ['富士山', '富士', 'fuji', 'mount fuji'],
+    lat: 35.5215516, lng: 138.7573478,
+    heading: 268, pitch: 1.79,
+  },
+];
+
+function getPinnedView(place) {
+  const lower = place.toLowerCase();
+  return PINNED_STREET_VIEW.find(p => p.keywords.some(k => lower.includes(k))) || null;
+}
+
+// ── Show Street View panorama ──
+async function showStreetView(place) {
+  svLoading.style.display = 'flex';
+  svPano.innerHTML = '';
+  streetview.classList.add('active');
+
+  try {
+    await loadGoogleMapsAPI();
+
+    // Check for pinned location first
+    const pinned = getPinnedView(place);
+    if (pinned) {
+      svLoading.style.display = 'none';
+      currentPanorama = new google.maps.StreetViewPanorama(svPano, {
+        position: { lat: pinned.lat, lng: pinned.lng },
+        pov: { heading: pinned.heading, pitch: pinned.pitch },
+        zoom: 1,
+        linksControl: true,
+        panControl: true,
+        enableCloseButton: false,
+        fullscreenControl: false,
+      });
+      return;
+    }
+
+    // Load API and geocode in parallel
+    const [, coords] = await Promise.all([Promise.resolve(), geocodePlace(place)]);
+
+    if (!coords) {
+      showSVFallback(place, 'Could not find this location');
+      return;
+    }
+
+    const location = new google.maps.LatLng(coords.lat, coords.lng);
+    const svService = new google.maps.StreetViewService();
+
+    svService.getPanorama({ location, radius: 500 }, (data, status) => {
+      if (status === google.maps.StreetViewStatus.OK) {
+        svLoading.style.display = 'none';
+        currentPanorama = new google.maps.StreetViewPanorama(svPano, {
+          position: data.location.latLng,
+          pov: { heading: 0, pitch: 0 },
+          zoom: 1,
+          linksControl: true,
+          panControl: true,
+          enableCloseButton: false,
+          fullscreenControl: false,
+        });
+      } else {
+        showSVFallback(place, 'No street view available here');
+      }
+    });
+  } catch (err) {
+    showSVFallback(place, 'Failed to load Street View');
+  }
+}
+
+function showSVFallback(place, message) {
+  const encoded = encodeURIComponent(place);
+  svLoading.innerHTML = `
+    <div class="sv-fallback">
+      <p>${message}</p>
+      <a href="https://www.google.com/maps/search/${encoded}/@0,0,12z/data=!3m1!4b1" target="_blank">Open in Google Maps</a>
+    </div>`;
+}
+
+let currentPanorama = null;
+const returnDoor     = document.getElementById('returnDoor');
+const doorCloseAnim  = document.getElementById('doorCloseAnim');
+
+// ── Door close sound (reverse creak) ──
+function playDoorCloseSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    // Reverb
+    function makeReverb(duration, decay) {
+      const len = ctx.sampleRate * duration;
+      const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+        }
+      }
+      return buf;
+    }
+
+    const convolver = ctx.createConvolver();
+    convolver.buffer = makeReverb(1.2, 3.5);
+    const reverbGain = ctx.createGain();
+    reverbGain.gain.value = 0.15;
+    convolver.connect(reverbGain).connect(ctx.destination);
+
+    // Reverse creak — sweeps downward
+    const creakDur = 0.8;
+    const creakOsc = ctx.createOscillator();
+    creakOsc.type = 'sawtooth';
+    creakOsc.frequency.setValueAtTime(500, now);
+    creakOsc.frequency.exponentialRampToValueAtTime(140, now + creakDur);
+    const creakOsc2 = ctx.createOscillator();
+    creakOsc2.type = 'triangle';
+    creakOsc2.frequency.setValueAtTime(320, now);
+    creakOsc2.frequency.exponentialRampToValueAtTime(90, now + creakDur);
+    const creakEnv = ctx.createGain();
+    creakEnv.gain.setValueAtTime(0, now);
+    creakEnv.gain.linearRampToValueAtTime(0.06, now + 0.1);
+    creakEnv.gain.setValueAtTime(0.06, now + creakDur * 0.4);
+    creakEnv.gain.linearRampToValueAtTime(0, now + creakDur);
+    const creakFilter = ctx.createBiquadFilter();
+    creakFilter.type = 'bandpass';
+    creakFilter.frequency.setValueAtTime(500, now);
+    creakFilter.frequency.exponentialRampToValueAtTime(180, now + creakDur);
+    creakFilter.Q.value = 2;
+    creakOsc.connect(creakFilter);
+    creakOsc2.connect(creakFilter);
+    creakFilter.connect(creakEnv);
+    creakEnv.connect(ctx.destination);
+    creakEnv.connect(convolver);
+    creakOsc.start(now);
+    creakOsc2.start(now);
+    creakOsc.stop(now + creakDur);
+    creakOsc2.stop(now + creakDur);
+
+    // Latch click at the end
+    const clickTime = now + creakDur - 0.05;
+    const clickOsc = ctx.createOscillator();
+    clickOsc.type = 'sine';
+    clickOsc.frequency.setValueAtTime(220, clickTime);
+    clickOsc.frequency.exponentialRampToValueAtTime(120, clickTime + 0.06);
+    const clickEnv = ctx.createGain();
+    clickEnv.gain.setValueAtTime(0, clickTime);
+    clickEnv.gain.linearRampToValueAtTime(0.25, clickTime + 0.003);
+    clickEnv.gain.exponentialRampToValueAtTime(0.001, clickTime + 0.06);
+    clickOsc.connect(clickEnv);
+    clickEnv.connect(ctx.destination);
+    clickEnv.connect(convolver);
+    clickOsc.start(clickTime);
+    clickOsc.stop(clickTime + 0.06);
+  } catch (e) { /* audio not available */ }
+}
+
+// ── Destroy panorama to avoid memory leaks ──
+function destroyPanorama() {
+  if (currentPanorama) {
+    google.maps.event.clearInstanceListeners(currentPanorama);
+    currentPanorama = null;
+  }
+  svPano.innerHTML = '';
+}
+
+// ── Leave street view (shared logic) ──
+function leaveStreetView() {
+  destroyPanorama();
+  streetview.classList.remove('active');
+  svLoading.style.display = 'flex';
+  svLoading.innerHTML = '<div class="spinner"></div><span>Opening the door…</span>';
+  resetLanding();
+}
+
+// ── Return door button — animated close ──
+returnDoor.addEventListener('click', async () => {
+  playDoorCloseSound();
+
+  // Show close animation overlay on top of street view
+  doorCloseAnim.classList.add('active');
+  doorCloseAnim.classList.remove('closing', 'closed');
+  void doorCloseAnim.offsetHeight;
+
+  // Start door swing closed
+  await wait(50);
+  doorCloseAnim.classList.add('closing');
+
+  // Wait for door to swing shut
+  await wait(1000);
+
+  // Fade to dark
+  doorCloseAnim.classList.add('closed');
+  await wait(400);
+
+  // Clean up and return to landing
+  doorCloseAnim.classList.remove('active', 'closing', 'closed');
+  leaveStreetView();
+});
+
+// ── Back button (instant) ──
+svBack.addEventListener('click', () => {
+  leaveStreetView();
+});
+
+function resetLanding() {
+  doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
+  landing.classList.remove('hidden');
+  placeInput.value = '';
+  openBtn.classList.remove('visible');
+  doorWrapper.classList.remove('has-text');
+  hintText.textContent = HINT_DEFAULT;
+  lastHasText = false;
+  placeInput.focus();
+  isOpening = false;
+}
+
 async function openDoor(place) {
   landing.classList.add('hidden');
 
@@ -1184,104 +1713,9 @@ async function openDoor(place) {
   // Let the step-through light expand to fill the screen
   await wait(600);
 
-  // Show street view inside the page
-  await openStreetView(place);
-
-  // Reset door animation (street view screen is now showing)
+  // Hide door animation, show Street View
   doorAnim.classList.remove('active', 'entrance', 'swing', 'flash');
-  isOpening = false;
-}
-
-// ── Special pinned coordinates (hand-picked great views) ──
-const PINNED_LOCATIONS = {
-  keywords: ['富士山', '富士', 'fuji', 'mount fuji'],
-  coords: { lat: 35.5215516, lng: 138.7573478 },
-  heading: 2.68,
-  pitch: 1.79,
-};
-
-function getPinnedCoords(place) {
-  const lower = place.toLowerCase();
-  if (PINNED_LOCATIONS.keywords.some(k => lower.includes(k))) {
-    return PINNED_LOCATIONS;
-  }
-  return null;
-}
-
-let svPanorama = null;
-
-async function openStreetView(place) {
-  const screen = document.getElementById('streetviewScreen');
-  const mapDiv = document.getElementById('streetviewMap');
-  const label  = document.getElementById('svPlaceName');
-
-  label.textContent = place;
-  screen.style.display = 'block';
-
-  // Load Maps JS API if not yet loaded
-  if (!window.google || !window.google.maps) {
-    await loadMapsAPI();
-  }
-
-  const pinned = getPinnedCoords(place);
-
-  if (pinned) {
-    // Use hand-picked coordinates directly
-    svPanorama = new google.maps.StreetViewPanorama(mapDiv, {
-      position: { lat: pinned.coords.lat, lng: pinned.coords.lng },
-      pov: { heading: pinned.heading * 100, pitch: pinned.pitch },
-      zoom: 1,
-      addressControl: false,
-      fullscreenControl: false,
-      motionTracking: false,
-    });
-  } else {
-    // Geocode the place name then find nearest street view
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ address: place }, (results, status) => {
-      if (status === 'OK') {
-        const loc = results[0].geometry.location;
-        svPanorama = new google.maps.StreetViewPanorama(mapDiv, {
-          position: loc,
-          pov: { heading: 0, pitch: 0 },
-          zoom: 1,
-          addressControl: false,
-          fullscreenControl: false,
-          motionTracking: false,
-        });
-      } else {
-        // Fallback: open in new tab
-        closeStreetView();
-        const encoded = encodeURIComponent(place);
-        window.open(`https://www.google.com/maps/search/${encoded}/@0,0,12z/data=!3m1!4b1`, '_blank');
-      }
-    });
-  }
-}
-
-function closeStreetView() {
-  const screen = document.getElementById('streetviewScreen');
-  screen.style.display = 'none';
-  svPanorama = null;
-  // Reset door for next use
-  landing.classList.remove('hidden');
-  placeInput.value = '';
-  openBtn.classList.remove('visible');
-  doorWrapper.classList.remove('has-text');
-  hintText.textContent = HINT_DEFAULT;
-  lastHasText = false;
-  placeInput.focus();
-}
-
-function loadMapsAPI() {
-  return new Promise((resolve) => {
-    if (window.google && window.google.maps) { resolve(); return; }
-    window._mapsApiReady = resolve;
-    const s = document.createElement('script');
-    s.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyD1Y6cgwKJBLTMP5729GYcbiPvZpZPR1Lo&callback=_mapsApiReady';
-    s.async = true;
-    document.head.appendChild(s);
-  });
+  showStreetView(place);
 }
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
